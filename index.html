@@ -1,0 +1,965 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alkohol Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .view {
+            display: none;
+        }
+
+        .view.active {
+            display: block;
+        }
+
+        h1 {
+            text-align: center;
+            color: #4a5568;
+            margin-bottom: 30px;
+        }
+
+        .day-input-view {
+            text-align: center;
+        }
+
+        .current-date {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #4f46e5;
+            margin-bottom: 30px;
+        }
+
+        .choice-container {
+            margin: 40px 0;
+        }
+
+        .choice-option {
+            display: block;
+            width: 100%;
+            margin: 15px 0;
+            padding: 15px;
+            border: 3px solid #e2e8f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        .choice-option input[type="radio"] {
+            margin-right: 15px;
+            transform: scale(1.5);
+        }
+
+        .choice-option.sober {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+
+        .choice-option.sober:hover {
+            background: #d1fae5;
+        }
+
+        .choice-option.moderate {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .choice-option.moderate:hover {
+            background: #fef3c7;
+        }
+
+        .choice-option.alcohol {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .choice-option.alcohol:hover {
+            background: #fecaca;
+        }
+
+        .choice-option.superday {
+            border-color: #059669;
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+            position: relative;
+        }
+
+        .choice-option.superday:hover {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+        }
+
+        .choice-option.superday::before {
+            content: "⭐";
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 20px;
+        }
+
+        .submit-btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            width: 100%;
+        }
+
+        .submit-btn:hover {
+            background: #4338ca;
+        }
+
+        .submit-btn:disabled {
+            background: #cbd5e0;
+            cursor: not-allowed;
+        }
+
+        .storage-info {
+            text-align: center;
+            margin-top: 15px;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .storage-info.working {
+            background: #ecfdf5;
+            border: 2px solid #10b981;
+        }
+
+        .storage-info.error {
+            background: #fef2f2;
+            border: 2px solid #ef4444;
+        }
+
+        /* Monatsübersicht */
+        .month-view {
+            text-align: center;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            padding: 20px;
+            border-radius: 12px;
+            color: white;
+        }
+
+        .streak-card {
+            background: linear-gradient(135deg, #4f46e5, #06b6d4);
+        }
+
+        .success-card {
+            background: linear-gradient(135deg, #10b981, #059669);
+        }
+
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .month-header {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+            margin-bottom: 30px;
+        }
+
+        .weekday-header {
+            text-align: center;
+            font-weight: bold;
+            padding: 8px;
+            background: #f7fafc;
+            color: #4a5568;
+            border-radius: 6px;
+            font-size: 12px;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: transform 0.1s ease;
+            position: relative;
+        }
+
+        .day-cell:hover {
+            transform: scale(1.1);
+        }
+
+        .day-cell.empty {
+            visibility: hidden;
+        }
+
+        .day-cell.sober {
+            background: #10b981;
+            color: white;
+        }
+
+        .day-cell.moderate {
+            background: #f59e0b;
+            color: white;
+        }
+
+        .day-cell.alcohol {
+            background: #ef4444;
+            color: white;
+        }
+
+        .day-cell.superday {
+            background: #059669;
+            color: white;
+        }
+
+        .day-cell.superday::after {
+            content: "⭐";
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            font-size: 12px;
+            color: #fbbf24;
+        }
+
+        .day-cell.neutral {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+        }
+
+        .day-cell.today {
+            border: 3px solid #4f46e5;
+            font-weight: bold;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        .nav-btn {
+            background: #4f46e5;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .nav-btn:hover {
+            background: #4338ca;
+        }
+
+        .nav-btn.back {
+            background: #64748b;
+        }
+
+        .nav-btn.back:hover {
+            background: #475569;
+        }
+
+        .edit-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            z-index: 1000;
+            text-align: center;
+            display: none;
+        }
+
+        .edit-popup.active {
+            display: block;
+        }
+
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+
+        .popup-overlay.active {
+            display: block;
+        }
+
+        .edit-date {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #4a5568;
+            margin-bottom: 20px;
+        }
+
+        .edit-option {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .edit-option.sober {
+            border-color: #10b981;
+            background: #ecfdf5;
+        }
+
+        .edit-option.moderate {
+            border-color: #f59e0b;
+            background: #fffbeb;
+        }
+
+        .edit-option.alcohol {
+            border-color: #ef4444;
+            background: #fef2f2;
+        }
+
+        .edit-option.superday {
+            border-color: #059669;
+            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+        }
+
+        .edit-option.superday::after {
+            content: "⭐";
+            position: absolute;
+            top: 50%;
+            right: 15px;
+            transform: translateY(-50%);
+            font-size: 18px;
+        }
+
+        .edit-option.delete {
+            border-color: #64748b;
+            background: #f8fafc;
+        }
+
+        .legend {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: inline-block;
+            margin: 5px 10px 5px 0;
+        }
+
+        .legend-color {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border-radius: 3px;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Tag-Eingabe Ansicht -->
+        <div id="dayInputView" class="view active">
+            <h1>🍷 Alkohol Tracker</h1>
+            
+            <div class="current-date" id="currentDateDisplay"></div>
+            
+            <div class="choice-container">
+                <label class="choice-option sober">
+                    <input type="radio" name="dayChoice" value="sober">
+                    <span>🟢 Alkoholfrei - Kein Alkohol getrunken</span>
+                </label>
+                
+                <label class="choice-option moderate">
+                    <input type="radio" name="dayChoice" value="moderate">
+                    <span>🟡 Moderat - Wenig Alkohol getrunken</span>
+                </label>
+                
+                <label class="choice-option alcohol">
+                    <input type="radio" name="dayChoice" value="alcohol">
+                    <span>🔴 Alkohol - Viel Alkohol getrunken</span>
+                </label>
+                
+                <label class="choice-option superday">
+                    <input type="radio" name="dayChoice" value="superday">
+                    <span>⭐ Supertag - Alkoholfrei + Sport gemacht!</span>
+                </label>
+            </div>
+            
+            <button class="submit-btn" id="submitDay" disabled>Tag speichern</button>
+            
+            <div class="storage-info" id="storageInfo">
+                🍷 Gespeicherte Tage: <span id="savedDaysCount">0</span><br>
+                <small id="storageStatus">Lade...</small>
+            </div>
+            
+            <div class="nav-buttons">
+                <button class="nav-btn" onclick="showMonthView()">📊 Monatsübersicht</button>
+            </div>
+        </div>
+
+        <!-- Monats-Übersicht -->
+        <div id="monthView" class="view">
+            <h1>📊 Alkohol-Übersicht</h1>
+            
+            <div class="stats-container">
+                <div class="stat-card streak-card">
+                    <div class="stat-label">Aktueller Streak</div>
+                    <div class="stat-number" id="streakNumber">0</div>
+                    <div class="stat-label">alkoholfreie Tage</div>
+                </div>
+                
+                <div class="stat-card success-card">
+                    <div class="stat-label">Erfolgsquote</div>
+                    <div class="stat-number" id="successRate">0%</div>
+                    <div class="stat-label">diesen Monat</div>
+                </div>
+            </div>
+            
+            <div class="month-header" id="monthHeader"></div>
+            
+            <div class="legend">
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #10b981;"></span>
+                    Alkoholfrei
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #f59e0b;"></span>
+                    Moderat
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #ef4444;"></span>
+                    Alkohol
+                </div>
+                <div class="legend-item">
+                    <span class="legend-color" style="background: #059669;"></span>
+                    ⭐ Supertag
+                </div>
+            </div>
+            
+            <div class="days-grid" id="monthGrid"></div>
+            
+            <div class="nav-buttons">
+                <button class="nav-btn back" onclick="showDayInput()">← Zurück zur Eingabe</button>
+                <button class="nav-btn" onclick="previousMonth()">← Vorheriger Monat</button>
+                <button class="nav-btn" onclick="nextMonth()">Nächster Monat →</button>
+            </div>
+        </div>
+
+        <!-- Edit Popup -->
+        <div class="popup-overlay" id="popupOverlay" onclick="closeEditPopup()"></div>
+        <div class="edit-popup" id="editPopup">
+            <div class="edit-date" id="editDate"></div>
+            <button class="edit-option sober" onclick="updateDay('sober')">🟢 Alkoholfrei</button>
+            <button class="edit-option moderate" onclick="updateDay('moderate')">🟡 Moderat</button>
+            <button class="edit-option alcohol" onclick="updateDay('alcohol')">🔴 Alkohol</button>
+            <button class="edit-option superday" onclick="updateDay('superday')">⭐ Supertag</button>
+            <button class="edit-option delete" onclick="updateDay('delete')">🗑️ Tag löschen</button>
+            <button class="nav-btn" onclick="closeEditPopup()" style="margin-top: 15px;">Abbrechen</button>
+        </div>
+    </div>
+
+    <script>
+        console.log('🍷 Alkohol Tracker gestartet');
+        
+        let currentInputDate = new Date();
+        let currentViewDate = new Date();
+        let dayData = {};
+        let editingDate = null;
+        let storageWorking = false;
+
+        const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
+            'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
+        const weekdays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+
+        function formatDateKey(date) {
+            return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+        }
+
+        function formatDisplayDate(date) {
+            const day = date.getDate();
+            const month = monthNames[date.getMonth()];
+            const year = date.getFullYear();
+            return `${day}. ${month} ${year}`;
+        }
+
+        // STORAGE FUNKTIONEN
+        function testStorage() {
+            try {
+                localStorage.setItem('__test__', 'test');
+                const test = localStorage.getItem('__test__');
+                localStorage.removeItem('__test__');
+                storageWorking = test === 'test';
+                console.log('📊 localStorage working:', storageWorking);
+                return storageWorking;
+            } catch (e) {
+                console.error('❌ localStorage failed:', e);
+                storageWorking = false;
+                return false;
+            }
+        }
+
+        function saveData() {
+            if (!storageWorking) {
+                updateStorageStatus('❌ Speichern nicht möglich', 'error');
+                return false;
+            }
+
+            try {
+                localStorage.setItem('alcoholTrackerData', JSON.stringify(dayData));
+                localStorage.setItem('alcoholTrackerCurrentDate', currentInputDate.toISOString());
+                
+                const testData = localStorage.getItem('alcoholTrackerData');
+                if (testData) {
+                    updateStorageStatus('✅ Daten gespeichert', 'working');
+                    return true;
+                } else {
+                    updateStorageStatus('❌ Speichern fehlgeschlagen', 'error');
+                    return false;
+                }
+            } catch (e) {
+                console.error('❌ Storage error:', e);
+                updateStorageStatus('❌ Speicher-Fehler', 'error');
+                return false;
+            }
+        }
+
+        function loadData() {
+            if (!storageWorking) {
+                updateStorageStatus('⚠️ Kein persistenter Speicher', 'error');
+                return;
+            }
+
+            try {
+                const savedData = localStorage.getItem('alcoholTrackerData');
+                const savedDate = localStorage.getItem('alcoholTrackerCurrentDate');
+                
+                if (savedData && savedData !== 'null') {
+                    dayData = JSON.parse(savedData);
+                } else {
+                    dayData = {};
+                }
+                
+                if (savedDate && savedDate !== 'null') {
+                    currentInputDate = new Date(savedDate);
+                } else {
+                    currentInputDate = new Date();
+                }
+                
+                updateStorageStatus(`✅ ${Object.keys(dayData).length} Tage geladen`, 'working');
+                
+            } catch (e) {
+                console.error('❌ Loading error:', e);
+                dayData = {};
+                currentInputDate = new Date();
+                updateStorageStatus('❌ Laden fehlgeschlagen', 'error');
+            }
+        }
+
+        function updateStorageStatus(message, type) {
+            const statusElement = document.getElementById('storageStatus');
+            const infoElement = document.getElementById('storageInfo');
+            const countElement = document.getElementById('savedDaysCount');
+            
+            if (statusElement) {
+                statusElement.textContent = message;
+            }
+            
+            if (countElement) {
+                countElement.textContent = Object.keys(dayData).length;
+            }
+            
+            if (infoElement) {
+                infoElement.className = `storage-info ${type}`;
+            }
+        }
+
+        // STREAK BERECHNUNG (nur alkoholfreie und Supertage zählen)
+        function calculateStreak() {
+            let latestSoberDate = null;
+            
+            // Finde den neuesten alkoholfreien Tag (sober oder superday)
+            for (let dateKey in dayData) {
+                if (dayData[dateKey] === 'sober' || dayData[dateKey] === 'superday') {
+                    const parts = dateKey.split('-');
+                    const year = parseInt(parts[0]);
+                    const month = parseInt(parts[1]);
+                    const day = parseInt(parts[2]);
+                    const date = new Date(year, month, day);
+                    
+                    if (!latestSoberDate || date > latestSoberDate) {
+                        latestSoberDate = date;
+                    }
+                }
+            }
+            
+            if (!latestSoberDate) {
+                document.getElementById('streakNumber').textContent = '0';
+                return;
+            }
+            
+            let streak = 0;
+            let checkDate = new Date(latestSoberDate);
+            
+            for (let i = 0; i < 100; i++) {
+                const key = formatDateKey(checkDate);
+                const status = dayData[key];
+                
+                if (status === 'sober' || status === 'superday') {
+                    streak++;
+                } else {
+                    break;
+                }
+                
+                checkDate.setDate(checkDate.getDate() - 1);
+            }
+            
+            document.getElementById('streakNumber').textContent = streak;
+        }
+
+        // ERFOLGSQUOTE BERECHNUNG mit Gewichtung
+        function calculateSuccessRate() {
+            const year = currentViewDate.getFullYear();
+            const month = currentViewDate.getMonth();
+            
+            let totalPoints = 0;
+            let maxPossiblePoints = 0;
+            
+            // Alle Tage des aktuellen Monats durchgehen
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const today = new Date();
+            
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const currentDay = new Date(year, month, day);
+                
+                // Nur vergangene und heutige Tage zählen
+                if (currentDay <= today) {
+                    const dateKey = formatDateKey(currentDay);
+                    const status = dayData[dateKey];
+                    
+                    maxPossiblePoints += 1.5; // Maximale Punkte pro Tag (Supertag)
+                    
+                    if (status === 'superday') {
+                        totalPoints += 1.5; // Bonus für Supertag
+                    } else if (status === 'sober') {
+                        totalPoints += 1.0; // Volle Punkte für alkoholfrei
+                    } else if (status === 'moderate') {
+                        totalPoints += 0.3; // Teilpunkte für Moderation
+                    } else if (status === 'alcohol') {
+                        totalPoints += 0; // Keine Punkte für Alkohol
+                    } else {
+                        // Nicht eingetragene Tage
+                        totalPoints += 0.2; // Kleine Punkte (das Leben passiert)
+                    }
+                }
+            }
+            
+            const successRate = maxPossiblePoints > 0 ? Math.round((totalPoints / maxPossiblePoints) * 100) : 0;
+            document.getElementById('successRate').textContent = successRate + '%';
+        }
+
+        // HAUPTFUNKTIONEN
+        function saveDay() {
+            const selectedChoice = document.querySelector('input[name="dayChoice"]:checked');
+            if (!selectedChoice) return;
+            
+            const dateKey = formatDateKey(currentInputDate);
+            dayData[dateKey] = selectedChoice.value;
+            
+            const saveSuccess = saveData();
+            
+            // Visuelle Bestätigung
+            const btn = document.getElementById('submitDay');
+            const originalText = btn.textContent;
+            btn.textContent = saveSuccess ? '✅ Gespeichert!' : '❌ Fehler!';
+            btn.style.background = saveSuccess ? '#10b981' : '#ef4444';
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.style.background = '#4f46e5';
+            }, 2000);
+            
+            calculateStreak();
+            
+            // Nächster Tag
+            currentInputDate.setDate(currentInputDate.getDate() + 1);
+            updateDayInputView();
+            
+            // Reset
+            document.querySelectorAll('input[name="dayChoice"]').forEach(radio => {
+                radio.checked = false;
+            });
+            btn.disabled = true;
+        }
+
+        function updateDayInputView() {
+            document.getElementById('currentDateDisplay').textContent = formatDisplayDate(currentInputDate);
+            updateStorageStatus(`🍷 ${Object.keys(dayData).length} Tage`, storageWorking ? 'working' : 'error');
+            
+            const dateKey = formatDateKey(currentInputDate);
+            const existingData = dayData[dateKey];
+            
+            if (existingData) {
+                const radio = document.querySelector(`input[value="${existingData}"]`);
+                if (radio) {
+                    radio.checked = true;
+                    document.getElementById('submitDay').disabled = false;
+                    document.getElementById('submitDay').textContent = 'Tag aktualisieren';
+                }
+            } else {
+                document.getElementById('submitDay').textContent = 'Tag speichern';
+            }
+        }
+
+        function showMonthView() {
+            currentViewDate = new Date(currentInputDate);
+            document.getElementById('dayInputView').classList.remove('active');
+            document.getElementById('monthView').classList.add('active');
+            updateMonthView();
+            calculateStreak();
+            calculateSuccessRate();
+        }
+
+        function showDayInput() {
+            document.getElementById('monthView').classList.remove('active');
+            document.getElementById('dayInputView').classList.add('active');
+        }
+
+        function updateMonthView() {
+            const year = currentViewDate.getFullYear();
+            const month = currentViewDate.getMonth();
+            
+            document.getElementById('monthHeader').textContent = `${monthNames[month]} ${year}`;
+            
+            const grid = document.getElementById('monthGrid');
+            grid.innerHTML = '';
+            
+            weekdays.forEach(day => {
+                const header = document.createElement('div');
+                header.className = 'weekday-header';
+                header.textContent = day;
+                grid.appendChild(header);
+            });
+            
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+            const startDay = (firstDay.getDay() + 6) % 7;
+            
+            for (let i = 0; i < startDay; i++) {
+                const emptyCell = document.createElement('div');
+                emptyCell.className = 'day-cell empty';
+                grid.appendChild(emptyCell);
+            }
+            
+            const today = new Date();
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
+                dayCell.textContent = day;
+                
+                const dayDate = new Date(year, month, day);
+                const dateKey = formatDateKey(dayDate);
+                const dayStatus = dayData[dateKey];
+                
+                if (dayStatus === 'sober') {
+                    dayCell.classList.add('sober');
+                } else if (dayStatus === 'moderate') {
+                    dayCell.classList.add('moderate');
+                } else if (dayStatus === 'alcohol') {
+                    dayCell.classList.add('alcohol');
+                } else if (dayStatus === 'superday') {
+                    dayCell.classList.add('superday');
+                } else {
+                    dayCell.classList.add('neutral');
+                }
+                
+                if (dayDate.toDateString() === today.toDateString()) {
+                    dayCell.classList.add('today');
+                }
+                
+                dayCell.addEventListener('click', function() {
+                    openEditPopup(dayDate);
+                });
+                
+                grid.appendChild(dayCell);
+            }
+        }
+
+        function openEditPopup(date) {
+            editingDate = date;
+            document.getElementById('editDate').textContent = formatDisplayDate(date);
+            document.getElementById('popupOverlay').classList.add('active');
+            document.getElementById('editPopup').classList.add('active');
+        }
+
+        function closeEditPopup() {
+            document.getElementById('popupOverlay').classList.remove('active');
+            document.getElementById('editPopup').classList.remove('active');
+            editingDate = null;
+        }
+
+        function updateDay(action) {
+            if (!editingDate) return;
+            
+            const dateKey = formatDateKey(editingDate);
+            
+            if (action === 'delete') {
+                delete dayData[dateKey];
+            } else {
+                dayData[dateKey] = action;
+            }
+            
+            saveData();
+            closeEditPopup();
+            updateMonthView();
+            calculateStreak();
+            calculateSuccessRate();
+        }
+
+        function previousMonth() {
+            currentViewDate.setMonth(currentViewDate.getMonth() - 1);
+            updateMonthView();
+            calculateSuccessRate();
+        }
+
+        function nextMonth() {
+            currentViewDate.setMonth(currentViewDate.getMonth() + 1);
+            updateMonthView();
+            calculateSuccessRate();
+        }
+
+        function clearAllData() {
+            console.log('🗑️ Lösch-Button geklickt');
+            
+            // Robuste Bestätigung
+            try {
+                const userConfirmed = confirm('⚠️ ACHTUNG: Alle Alkohol-Tracker Daten werden dauerhaft gelöscht!\n\nDiese Aktion kann NICHT rückgängig gemacht werden.\n\nWirklich alle Daten löschen?');
+                console.log('🤔 Benutzer-Antwort:', userConfirmed);
+                
+                if (userConfirmed === true) {
+                    console.log('✅ Löschung bestätigt - führe Löschung durch');
+                    dayData = {};
+                    currentInputDate = new Date();
+                    
+                    if (storageWorking) {
+                        localStorage.removeItem('alcoholTrackerData');
+                        localStorage.removeItem('alcoholTrackerCurrentDate');
+                        console.log('🗑️ LocalStorage geleert');
+                    }
+                    
+                    updateMonthView();
+                    calculateStreak();
+                    calculateSuccessRate();
+                    updateDayInputView();
+                    console.log('✅ Alle Daten erfolgreich gelöscht');
+                    alert('✅ Alle Daten wurden erfolgreich gelöscht!');
+                } else {
+                    console.log('❌ Löschung vom Benutzer abgebrochen');
+                }
+            } catch (error) {
+                console.error('❌ Fehler bei Bestätigungsdialog:', error);
+                // Fallback ohne Bestätigung wenn Dialog blockiert wird
+                const fallbackConfirm = prompt('Browser blockiert Bestätigung. Tippen Sie "LÖSCHEN" um alle Daten zu löschen:');
+                if (fallbackConfirm === 'LÖSCHEN') {
+                    dayData = {};
+                    currentInputDate = new Date();
+                    if (storageWorking) {
+                        localStorage.removeItem('alcoholTrackerData');
+                        localStorage.removeItem('alcoholTrackerCurrentDate');
+                    }
+                    updateMonthView();
+                    calculateStreak();
+                    calculateSuccessRate();
+                    updateDayInputView();
+                    alert('✅ Alle Daten wurden gelöscht!');
+                }
+            }
+        }
+
+        // Funktionen global verfügbar machen
+        window.clearAllData = clearAllData;
+        window.showMonthView = showMonthView;
+        window.showDayInput = showDayInput;
+        window.previousMonth = previousMonth;
+        window.nextMonth = nextMonth;
+        window.openEditPopup = openEditPopup;
+        window.closeEditPopup = closeEditPopup;
+        window.updateDay = updateDay;
+
+        // INITIALIZATION
+        document.addEventListener('DOMContentLoaded', function() {
+            testStorage();
+            loadData();
+            
+            document.querySelectorAll('input[name="dayChoice"]').forEach(radio => {
+                radio.addEventListener('change', function() {
+                    document.getElementById('submitDay').disabled = false;
+                });
+            });
+            
+            document.getElementById('submitDay').addEventListener('click', saveDay);
+            
+            updateDayInputView();
+        });
+    </script>
+</body>
+</html>
