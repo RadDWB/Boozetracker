@@ -1,1008 +1,751 @@
 <!DOCTYPE html>
 <html lang="de">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Alkohol Tracker</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 500px;
-            margin: 0 auto;
-            padding: 20px;
-            background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%);
-            min-height: 100vh;
-            color: #333;
-        }
-
-        .container {
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-
-        .view {
-            display: none;
-        }
-
-        .view.active {
-            display: block;
-        }
-
-        h1 {
-            text-align: center;
-            color: #4a5568;
-            margin-bottom: 30px;
-        }
-
-        .day-input-view {
-            text-align: center;
-        }
-
-        .current-date {
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #4f46e5;
-            margin-bottom: 30px;
-        }
-
-        .choice-container {
-            margin: 40px 0;
-        }
-
-        .choice-option {
-            display: block;
-            width: 100%;
-            margin: 15px 0;
-            padding: 15px;
-            border: 3px solid #e2e8f0;
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            background: white;
-            font-size: 16px;
-            box-sizing: border-box;
-        }
-
-        .choice-option input[type="radio"] {
-            margin-right: 15px;
-            transform: scale(1.5);
-        }
-
-        .choice-option.sober {
-            border-color: #10b981;
-            background: #ecfdf5;
-        }
-
-        .choice-option.sober:hover {
-            background: #d1fae5;
-        }
-
-        .choice-option.moderate {
-            border-color: #f59e0b;
-            background: #fffbeb;
-        }
-
-        .choice-option.moderate:hover {
-            background: #fef3c7;
-        }
-
-        .choice-option.alcohol {
-            border-color: #ef4444;
-            background: #fef2f2;
-        }
-
-        .choice-option.alcohol:hover {
-            background: #fecaca;
-        }
-
-        .choice-option.superday {
-            border-color: #059669;
-            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-            position: relative;
-        }
-
-        .choice-option.superday:hover {
-            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-        }
-
-        .choice-option.superday::before {
-            content: "⭐";
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            font-size: 20px;
-        }
-
-        .submit-btn {
-            background: #4f46e5;
-            color: white;
-            border: none;
-            padding: 15px 40px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 20px;
-            width: 100%;
-        }
-
-        .submit-btn:hover {
-            background: #4338ca;
-        }
-
-        .submit-btn:disabled {
-            background: #cbd5e0;
-            cursor: not-allowed;
-        }
-
-        .storage-info {
-            text-align: center;
-            margin-top: 15px;
-            padding: 10px;
-            background: #f7fafc;
-            border-radius: 8px;
-            font-size: 14px;
-        }
-
-        .storage-info.working {
-            background: #ecfdf5;
-            border: 2px solid #10b981;
-        }
-
-        .storage-info.error {
-            background: #fef2f2;
-            border: 2px solid #ef4444;
-        }
-
-        /* Monatsübersicht */
-        .month-view {
-            text-align: center;
-        }
-
-        .stats-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 30px;
-        }
-
-        .stat-card {
-            padding: 20px;
-            border-radius: 12px;
-            color: white;
-        }
-
-        .streak-card {
-            background: linear-gradient(135deg, #4f46e5, #06b6d4);
-        }
-
-        .success-card {
-            background: linear-gradient(135deg, #10b981, #059669);
-        }
-
-        .stat-number {
-            font-size: 2.5em;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            opacity: 0.9;
-        }
-
-        .month-header {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #4a5568;
-            margin-bottom: 20px;
-        }
-
-        .days-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-            margin-bottom: 30px;
-        }
-
-        .weekday-header {
-            text-align: center;
-            font-weight: bold;
-            padding: 8px;
-            background: #f7fafc;
-            color: #4a5568;
-            border-radius: 6px;
-            font-size: 12px;
-        }
-
-        .day-cell {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 6px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: transform 0.1s ease;
-            position: relative;
-        }
-
-        .day-cell:hover {
-            transform: scale(1.1);
-        }
-
-        .day-cell.empty {
-            visibility: hidden;
-        }
-
-        .day-cell.sober {
-            background: #10b981;
-            color: white;
-        }
-
-        .day-cell.moderate {
-            background: #f59e0b;
-            color: white;
-        }
-
-        .day-cell.alcohol {
-            background: #ef4444;
-            color: white;
-        }
-
-        .day-cell.superday {
-            background: #059669;
-            color: white;
-        }
-
-        .day-cell.superday::after {
-            content: "⭐";
-            position: absolute;
-            top: 2px;
-            right: 2px;
-            font-size: 12px;
-            color: #fbbf24;
-        }
-
-        .day-cell.neutral {
-            background: #f7fafc;
-            color: #4a5568;
-            border: 1px solid #e2e8f0;
-        }
-
-        .day-cell.today {
-            border: 3px solid #4f46e5;
-            font-weight: bold;
-        }
-
-        .nav-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 30px;
-        }
-
-        .nav-btn {
-            background: #4f46e5;
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .nav-btn:hover {
-            background: #4338ca;
-        }
-
-        .nav-btn.back {
-            background: #64748b;
-        }
-
-        .nav-btn.back:hover {
-            background: #475569;
-        }
-
-        .edit-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-            z-index: 1000;
-            text-align: center;
-            display: none;
-        }
-
-        .edit-popup.active {
-            display: block;
-        }
-
-        .popup-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
-            display: none;
-        }
-
-        .popup-overlay.active {
-            display: block;
-        }
-
-        .edit-date {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #4a5568;
-            margin-bottom: 20px;
-        }
-
-        .edit-option {
-            display: block;
-            width: 100%;
-            margin: 10px 0;
-            padding: 15px;
-            border: 2px solid #e2e8f0;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-        }
-
-        .edit-option.sober {
-            border-color: #10b981;
-            background: #ecfdf5;
-        }
-
-        .edit-option.moderate {
-            border-color: #f59e0b;
-            background: #fffbeb;
-        }
-
-        .edit-option.alcohol {
-            border-color: #ef4444;
-            background: #fef2f2;
-        }
-
-        .edit-option.superday {
-            border-color: #059669;
-            background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-        }
-
-        .edit-option.superday::after {
-            content: "⭐";
-            position: absolute;
-            top: 50%;
-            right: 15px;
-            transform: translateY(-50%);
-            font-size: 18px;
-        }
-
-        .edit-option.delete {
-            border-color: #64748b;
-            background: #f8fafc;
-        }
-
-        .legend {
-            margin: 20px 0;
-            padding: 15px;
-            background: #f8fafc;
-            border-radius: 8px;
-            font-size: 12px;
-        }
-
-        .legend-item {
-            display: inline-block;
-            margin: 5px 10px 5px 0;
-        }
-
-        .legend-color {
-            display: inline-block;
-            width: 15px;
-            height: 15px;
-            border-radius: 3px;
-            margin-right: 5px;
-            vertical-align: middle;
-        }
-    </style>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  />
+  <title>Alkohol Tracker</title>
+
+  <style>
+    :root{
+      --bg1:#0f172a;          /* slate-900 */
+      --bg2:#0b1324;          /* deep blend */
+      --card:#0b1220cc;       /* translucent card */
+      --text:#e5e7eb;         /* gray-200 */
+      --muted:#9ca3af;        /* gray-400 */
+      --primary:#6366f1;      /* indigo-500 */
+      --primary-2:#06b6d4;    /* cyan-500 */
+      --success:#10b981;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --super:#059669;
+      --ring: 0 0 0 2px rgba(99,102,241,.35), 0 8px 30px rgba(2,6,23,.35);
+      --radius: 18px;
+      --shadow: 0 12px 40px rgba(2,6,23,.45);
+      --grid-gap: 10px;
+    }
+
+    /* Base layout */
+    html, body{
+      height: 100%;
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(1000px 600px at 10% -10%, rgba(99,102,241,.25), transparent 40%),
+        radial-gradient(900px 500px at 110% 10%, rgba(6,182,212,.25), transparent 45%),
+        linear-gradient(160deg, var(--bg1) 0%, var(--bg2) 100%);
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Inter, "Helvetica Neue", Arial, "Apple Color Emoji","Segoe UI Emoji";
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    .container{
+      max-width: 700px;
+      margin: min(5vh,48px) auto;
+      padding: clamp(16px, 2.5vw, 28px);
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+      border: 1px solid rgba(148,163,184,.15);
+      border-radius: calc(var(--radius) + 4px);
+      box-shadow: var(--shadow);
+      backdrop-filter: saturate(140%) blur(10px);
+    }
+
+    .view{ display:none; }
+    .view.active{ display:block; }
+
+    header.app-title{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      margin-bottom: 22px;
+    }
+    header.app-title h1{
+      margin:0;
+      font-size: clamp(22px, 4.6vw, 32px);
+      font-weight: 800;
+      letter-spacing: .2px;
+      background: linear-gradient(90deg, #fff, #c7d2fe 40%, #a5f3fc 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .subtle{
+      margin-top: 6px;
+      text-align:center;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* Cards / elements */
+    .panel{
+      background: var(--card);
+      border: 1px solid rgba(148,163,184,.18);
+      border-radius: var(--radius);
+      padding: clamp(14px, 2.2vw, 22px);
+      box-shadow: 0 6px 24px rgba(2,6,23,.35);
+    }
+
+    .current-date{
+      font-size: clamp(24px, 6vw, 34px);
+      font-weight: 800;
+      text-align:center;
+      margin: 16px 0 10px;
+      letter-spacing:.3px;
+    }
+
+    .choice-container{ margin: 18px 0 8px; display: grid; gap: 10px; }
+    .choice-option{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      width:100%;
+      padding: 14px 14px;
+      border: 1.5px solid rgba(148,163,184,.22);
+      border-radius: 14px;
+      cursor: pointer;
+      transition: transform .1s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+      background: rgba(2,6,23,.35);
+    }
+    .choice-option:hover{ transform: translateY(-1px); box-shadow: var(--ring); }
+    .choice-option input[type="radio"]{ transform: scale(1.3); accent-color: var(--primary); }
+
+    .choice-option.sober{ border-color: color-mix(in oklab, var(--success) 50%, transparent); background: linear-gradient(180deg, rgba(16,185,129,.12), rgba(2,6,23,.2)); }
+    .choice-option.moderate{ border-color: color-mix(in oklab, var(--warn) 55%, transparent); background: linear-gradient(180deg, rgba(245,158,11,.12), rgba(2,6,23,.2)); }
+    .choice-option.alcohol{ border-color: color-mix(in oklab, var(--danger) 55%, transparent); background: linear-gradient(180deg, rgba(239,68,68,.12), rgba(2,6,23,.2)); }
+    .choice-option.superday{
+      border-color: color-mix(in oklab, var(--super) 65%, transparent);
+      background: linear-gradient(135deg, rgba(16,185,129,.18), rgba(6,182,212,.14));
+      position:relative;
+    }
+    .choice-option.superday::before{
+      content:"⭐"; position:absolute; right:12px; top:10px; opacity:.9;
+    }
+
+    .submit-row{ margin-top: 10px; display:flex; gap:10px; }
+    .btn{
+      --h: 46px;
+      height: var(--h);
+      padding: 0 18px;
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,.22);
+      background: linear-gradient(180deg, rgba(99,102,241,.9), rgba(99,102,241,.75));
+      color: white;
+      font-weight: 700;
+      letter-spacing:.3px;
+      cursor: pointer;
+      width: 100%;
+      transition: transform .08s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .btn:hover{ transform: translateY(-1px); box-shadow: var(--ring); }
+    .btn:disabled{ opacity:.55; cursor:not-allowed; transform:none; box-shadow:none; }
+    .btn.secondary{
+      background: linear-gradient(180deg, rgba(100,116,139,.6), rgba(100,116,139,.45));
+    }
+
+    .storage-info{
+      margin-top: 10px;
+      text-align:center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .storage-info .badge{
+      display:inline-block; padding:2px 8px; border-radius:999px; margin-left:6px;
+      background: rgba(148,163,184,.15); color:#cbd5e1; border:1px solid rgba(148,163,184,.25);
+      font-weight:600; font-size: 12px;
+    }
+
+    /* Month view */
+    .stats-grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .stat-card{
+      border-radius: 16px;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(99,102,241,.22), rgba(6,182,212,.18));
+      border: 1px solid rgba(148,163,184,.22);
+      text-align:center;
+    }
+    .stat-card.success{
+      background: linear-gradient(135deg, rgba(16,185,129,.22), rgba(5,150,105,.18));
+    }
+    .stat-number{
+      font-size: clamp(28px, 5.5vw, 40px);
+      font-weight: 900;
+      margin: 4px 0 2px;
+    }
+    .stat-label{ color: var(--muted); font-size: 12px; letter-spacing:.2px; }
+
+    .month-header{
+      display:flex; align-items:center; justify-content:space-between;
+      gap:12px; margin: 10px 0 12px;
+    }
+    .month-title{ font-weight: 800; font-size: clamp(18px, 4.2vw, 22px); }
+
+    .cal{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: var(--grid-gap);
+    }
+    .weekday{
+      text-align:center; font-weight:700; font-size: 12px;
+      color: #cbd5e1; padding: 6px 0;
+      background: rgba(148,163,184,.08);
+      border: 1px solid rgba(148,163,184,.18);
+      border-radius: 10px;
+    }
+    .day{
+      aspect-ratio: 1;
+      display:flex; align-items:center; justify-content:center;
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,.18);
+      background: rgba(2,6,23,.35);
+      font-weight:700;
+      transition: transform .08s ease, box-shadow .2s ease, background .2s ease;
+      cursor: pointer; position:relative; user-select:none;
+    }
+    .day:hover{ transform: scale(1.03); box-shadow: var(--ring); }
+    .day.sober{ background: linear-gradient(180deg, rgba(16,185,129,.25), rgba(2,6,23,.25)); }
+    .day.moderate{ background: linear-gradient(180deg, rgba(245,158,11,.25), rgba(2,6,23,.25)); }
+    .day.alcohol{ background: linear-gradient(180deg, rgba(239,68,68,.28), rgba(2,6,23,.25)); }
+    .day.superday{ background: linear-gradient(135deg, rgba(16,185,129,.35), rgba(6,182,212,.28)); }
+    .day.superday::after{
+      content:"⭐"; position:absolute; top:6px; right:8px; font-size: 12px; opacity:.9;
+    }
+    .day.today{ outline: 2px solid rgba(99,102,241,.9); box-shadow: var(--ring); }
+
+    .legend{
+      display:flex; flex-wrap:wrap; gap:10px 14px;
+      margin: 12px 0 14px;
+      color: var(--muted); font-size: 12px;
+    }
+    .legend .dot{
+      width: 12px; height: 12px; border-radius:4px; display:inline-block; margin-right:6px; vertical-align:middle;
+    }
+
+    .nav-row{
+      display:flex; gap:10px; margin-top: 14px;
+    }
+
+    /* Ko-fi / BMC banner */
+    .kofi{
+      text-align:center;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border: 1px solid rgba(148,163,184,.18);
+      border-radius: 14px;
+      padding: 14px;
+      margin: 10px 0 16px;
+    }
+    .kofi p{ margin: 0 0 12px; color: #e2e8f0; font-size: 14px; }
+    .support-buttons{
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap; /* fällt nebeneinander/untereinander je nach Breite */
+    }
+    .support-buttons > *{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+    }
+
+    /* Popup */
+    .popup-overlay{
+      position: fixed; inset: 0; background: rgba(2,6,23,.6);
+      display:none; z-index: 50;
+      backdrop-filter: blur(2px);
+    }
+    .popup-overlay.active{ display:block; }
+    .edit-popup{
+      position: fixed; inset: 0; display: grid; place-items: center; z-index: 60;
+      pointer-events:none;
+    }
+    .edit-card{
+      pointer-events:auto;
+      width: min(520px, 92vw);
+      background: var(--card);
+      border:1px solid rgba(148,163,184,.25);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+    .edit-title{ font-weight:800; font-size: 18px; margin-bottom: 8px; }
+    .edit-grid{ display:grid; gap:10px; margin-top: 8px; }
+    .edit-option{
+      width:100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border:1.5px solid rgba(148,163,184,.22);
+      background: rgba(2,6,23,.35);
+      color: var(--text);
+      cursor:pointer;
+      text-align:left;
+      transition: transform .06s ease, box-shadow .2s ease, background .2s ease;
+    }
+    .edit-option:hover{ transform: translateY(-1px); box-shadow: var(--ring); }
+    .edit-option.sober{ background: linear-gradient(180deg, rgba(16,185,129,.18), rgba(2,6,23,.25)); }
+    .edit-option.moderate{ background: linear-gradient(180deg, rgba(245,158,11,.18), rgba(2,6,23,.25)); }
+    .edit-option.alcohol{ background: linear-gradient(180deg, rgba(239,68,68,.18), rgba(2,6,23,.25)); }
+    .edit-option.superday{ background: linear-gradient(135deg, rgba(16,185,129,.22), rgba(6,182,212,.18)); position:relative; }
+    .edit-option.superday::after{ content:"⭐"; position:absolute; right:14px; top:50%; transform:translateY(-50%); }
+    .edit-option.delete{ background: linear-gradient(180deg, rgba(100,116,139,.15), rgba(2,6,23,.25)); }
+
+    footer{
+      margin-top: 22px;
+      text-align:center;
+      color: var(--muted);
+      font-size: 12.5px;
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      *{ transition:none !important; animation:none !important; }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Tag-Eingabe Ansicht -->
-        <div id="dayInputView" class="view active">
-            <h1>🍷 Alkohol Tracker</h1>
-            
-            <div class="current-date" id="currentDateDisplay"></div>
-            
-            <div class="choice-container">
-                <label class="choice-option sober">
-                    <input type="radio" name="dayChoice" value="sober">
-                    <span>🟢 Alkoholfrei - Kein Alkohol getrunken</span>
-                </label>
-                
-                <label class="choice-option moderate">
-                    <input type="radio" name="dayChoice" value="moderate">
-                    <span>🟡 Moderat - Wenig Alkohol getrunken</span>
-                </label>
-                
-                <label class="choice-option alcohol">
-                    <input type="radio" name="dayChoice" value="alcohol">
-                    <span>🔴 Alkohol - Viel Alkohol getrunken</span>
-                </label>
-                
-                <label class="choice-option superday">
-                    <input type="radio" name="dayChoice" value="superday">
-                    <span>⭐ Supertag - Alkoholfrei + Sport gemacht!</span>
-                </label>
-            </div>
-            
-            <button class="submit-btn" id="submitDay" disabled>Tag speichern</button>
-            
-            <div class="storage-info" id="storageInfo">
-                🍷 Gespeicherte Tage: <span id="savedDaysCount">0</span><br>
-                <small id="storageStatus">Lade...</small>
-            </div>
-            
-            <div class="nav-buttons">
-                <button class="nav-btn" onclick="showMonthView()">📊 Monatsübersicht</button>
-            </div>
+  <main class="container">
+    <!-- Eingabe-Ansicht -->
+    <div id="dayInputView" class="view active">
+      <header class="app-title">
+        <h1>🍷 Alkohol Tracker</h1>
+      </header>
+
+      <section class="panel">
+        <div class="current-date" id="currentDateDisplay"></div>
+
+        <div class="choice-container" role="group" aria-label="Tagesauswahl">
+          <label class="choice-option sober">
+            <input type="radio" name="dayChoice" value="sober" />
+            <span>🟢 Alkoholfrei – Kein Alkohol getrunken</span>
+          </label>
+
+        <label class="choice-option moderate">
+            <input type="radio" name="dayChoice" value="moderate" />
+            <span>🟡 Moderat – Wenig Alkohol getrunken</span>
+          </label>
+
+          <label class="choice-option alcohol">
+            <input type="radio" name="dayChoice" value="alcohol" />
+            <span>🔴 Alkohol – Viel Alkohol getrunken</span>
+          </label>
+
+          <label class="choice-option superday">
+            <input type="radio" name="dayChoice" value="superday" />
+            <span>⭐ Supertag – Alkoholfrei + Sport gemacht!</span>
+          </label>
         </div>
 
-        <!-- Monats-Übersicht -->
-        <div id="monthView" class="view">
-            <h1>📊 Alkohol-Übersicht</h1>
-
-            <!-- Ko-fi Unterstützung -->
-            <div style="margin:20px 0; text-align:center;">
-                <p>Wenn diese kleine Anwendung nützlich ist, unterstütze meine Arbeit und spendiere mir einen Kaffee...</p>
-                <div id="kofi-widget"></div>
-                <script type="text/javascript" src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
-                <script type="text/javascript">
-                    kofiwidget2.init('Spendier mir nen Kaffee Ko-fi', '#72a4f2', 'R5R319DK8N');
-                    kofiwidget2.draw();
-                </script>
-            </div>
-            
-            <div class="stats-container">
-                <div class="stat-card streak-card">
-                    <div class="stat-label">Aktueller Streak</div>
-                    <div class="stat-number" id="streakNumber">0</div>
-                    <div class="stat-label">alkoholfreie Tage</div>
-                </div>
-                
-                <div class="stat-card success-card">
-                    <div class="stat-label">Erfolgsquote</div>
-                    <div class="stat-number" id="successRate">0%</div>
-                    <div class="stat-label">diesen Monat</div>
-                </div>
-            </div>
-            
-            <div class="month-header" id="monthHeader"></div>
-            
-            <div class="legend">
-                <div class="legend-item">
-                    <span class="legend-color" style="background: #10b981;"></span>
-                    Alkoholfrei
-                </div>
-                <div class="legend-item">
-                    <span class="legend-color" style="background: #f59e0b;"></span>
-                    Moderat
-                </div>
-                <div class="legend-item">
-                    <span class="legend-color" style="background: #ef4444;"></span>
-                    Alkohol
-                </div>
-                <div class="legend-item">
-                    <span class="legend-color" style="background: #059669;"></span>
-                    ⭐ Supertag
-                </div>
-            </div>
-            
-            <div class="days-grid" id="monthGrid"></div>
-            
-            <div class="nav-buttons">
-                <button class="nav-btn back" onclick="showDayInput()">← Zurück zur Eingabe</button>
-                <button class="nav-btn" onclick="previousMonth()">← Vorheriger Monat</button>
-                <button class="nav-btn" onclick="nextMonth()">Nächster Monat →</button>
-            </div>
+        <div class="submit-row">
+          <button class="btn" id="submitDay" disabled>Tag speichern</button>
         </div>
 
-        <!-- Edit Popup -->
-        <div class="popup-overlay" id="popupOverlay" onclick="closeEditPopup()"></div>
-        <div class="edit-popup" id="editPopup">
-            <div class="edit-date" id="editDate"></div>
-            <button class="edit-option sober" onclick="updateDay('sober')">🟢 Alkoholfrei</button>
-            <button class="edit-option moderate" onclick="updateDay('moderate')">🟡 Moderat</button>
-            <button class="edit-option alcohol" onclick="updateDay('alcohol')">🔴 Alkohol</button>
-            <button class="edit-option superday" onclick="updateDay('superday')">⭐ Supertag</button>
-            <button class="edit-option delete" onclick="updateDay('delete')">🗑️ Tag löschen</button>
-            <button class="nav-btn" onclick="closeEditPopup()" style="margin-top: 15px;">Abbrechen</button>
+        <div class="storage-info" id="storageInfo">
+          <span>🍷 Gespeicherte Tage: <span id="savedDaysCount">0</span></span>
+          <span class="badge" id="storageStatus">Lade…</span>
         </div>
+
+        <div class="submit-row" style="margin-top:12px">
+          <button class="btn secondary" onclick="showMonthView()">📊 Monatsübersicht</button>
+        </div>
+      </section>
     </div>
 
-    <script>
-        console.log('🍷 Alkohol Tracker gestartet');
-        
-        let currentInputDate = new Date();
-        let currentViewDate = new Date();
-        let dayData = {};
-        let editingDate = null;
-        let storageWorking = false;
+    <!-- Monatsübersicht -->
+    <div id="monthView" class="view">
+      <header class="app-title">
+        <h1>📊 Alkohol-Übersicht</h1>
+      </header>
 
-        const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
-            'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
-        const weekdays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
+      <!-- Ko-fi + Buy Me a Coffee Hinweis & Buttons -->
+      <section class="kofi panel">
+        <p>
+          <strong>Anwendung nützlich?</strong> Spendier mir doch einen Kaffee durch Klick auf einen der Buttons!
+        </p>
 
-        function formatDateKey(date) {
-            return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+        <div class="support-buttons">
+          <!-- Ko-fi Button -->
+          <div id="kofi-holder">
+            <div id="kofi-widget" aria-label="Ko-fi Unterstützungsbutton"></div>
+            <script type="text/javascript" src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
+            <script type="text/javascript">
+              // Ko-fi
+              try{
+                kofiwidget2.init('Spendier mir nen Kaffee Ko-fi', '#72a4f2', 'R5R319DK8N');
+                kofiwidget2.draw();
+              }catch(e){ console.warn('Ko-fi Widget konnte nicht geladen werden.', e); }
+            </script>
+          </div>
+
+          <!-- Buy Me a Coffee Button -->
+          <div id="bmc-holder">
+            <script
+              type="text/javascript"
+              src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js"
+              data-name="bmc-button"
+              data-slug="rduwenbecky"
+              data-color="#40DCA5"
+              data-emoji="☕"
+              data-font="Cookie"
+              data-text="Spendier mir einen Kaffee"
+              data-outline-color="#000000"
+              data-font-color="#ffffff"
+              data-coffee-color="#FFDD00"
+            ></script>
+          </div>
+        </div>
+      </section>
+
+      <section class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Aktueller Streak</div>
+          <div class="stat-number" id="streakNumber">0</div>
+          <div class="stat-label">alkoholfreie Tage</div>
+        </div>
+        <div class="stat-card success">
+          <div class="stat-label">Erfolgsquote</div>
+          <div class="stat-number" id="successRate">0%</div>
+          <div class="stat-label">diesen Monat</div>
+        </div>
+      </section>
+
+      <section class="month-header">
+        <div class="month-title" id="monthHeader">—</div>
+        <div class="nav-row" style="margin:0">
+          <button class="btn secondary" onclick="previousMonth()">← Vorheriger</button>
+          <button class="btn" onclick="nextMonth()">Nächster →</button>
+        </div>
+      </section>
+
+      <section class="legend">
+        <span><span class="dot" style="background: var(--success)"></span>Alkoholfrei</span>
+        <span><span class="dot" style="background: var(--warn)"></span>Moderat</span>
+        <span><span class="dot" style="background: var(--danger)"></span>Alkohol</span>
+        <span><span class="dot" style="background: var(--super)"></span>⭐ Supertag</span>
+        <span><span class="dot" style="background: rgba(148,163,184,.3)"></span>Neutral</span>
+      </section>
+
+      <section id="monthGrid" class="cal panel" aria-label="Kalender"></section>
+
+      <div class="nav-row">
+        <button class="btn secondary" onclick="showDayInput()">← Zurück zur Eingabe</button>
+        <button class="btn" onclick="previousMonth()">← Vorheriger Monat</button>
+        <button class="btn" onclick="nextMonth()">Nächster Monat →</button>
+      </div>
+    </div>
+
+    <!-- Popup -->
+    <div class="popup-overlay" id="popupOverlay" onclick="closeEditPopup()"></div>
+    <div class="edit-popup" id="editPopup" aria-hidden="true">
+      <div class="edit-card panel">
+        <div class="edit-title" id="editDate">Datum</div>
+        <div class="edit-grid">
+          <button class="edit-option sober" onclick="updateDay('sober')">🟢 Alkoholfrei</button>
+          <button class="edit-option moderate" onclick="updateDay('moderate')">🟡 Moderat</button>
+          <button class="edit-option alcohol" onclick="updateDay('alcohol')">🔴 Alkohol</button>
+          <button class="edit-option superday" onclick="updateDay('superday')">⭐ Supertag</button>
+          <button class="edit-option delete" onclick="updateDay('delete')">🗑️ Tag löschen</button>
+          <button class="btn secondary" onclick="closeEditPopup()">Abbrechen</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      © 2025 by R. Duwenbeck
+    </footer>
+  </main>
+
+  <script>
+    console.log('🍷 Alkohol Tracker gestartet');
+
+    let currentInputDate = new Date();
+    let currentViewDate = new Date();
+    let dayData = {};
+    let editingDate = null;
+    let storageWorking = false;
+
+    const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+    const weekdays   = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+    function formatDateKey(date){ return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`; }
+    function formatDisplayDate(date){
+      const d = date.getDate();
+      const m = monthNames[date.getMonth()];
+      const y = date.getFullYear();
+      return `${d}. ${m} ${y}`;
+    }
+
+    /* Storage */
+    function testStorage(){
+      try{
+        localStorage.setItem('__test__','1');
+        localStorage.removeItem('__test__');
+        storageWorking = true;
+        return true;
+      }catch(e){
+        storageWorking = false;
+        return false;
+      }
+    }
+
+    function updateStorageStatus(message, mode){
+      const status = document.getElementById('storageStatus');
+      const info   = document.getElementById('storageInfo');
+      const count  = document.getElementById('savedDaysCount');
+      if(status) status.textContent = message;
+      if(count)  count.textContent  = Object.keys(dayData).length;
+      if(info){
+        // badge already styled; no mode classes needed here
+      }
+    }
+
+    function saveData(){
+      if(!storageWorking){
+        updateStorageStatus('❌ Speichern nicht möglich', 'error');
+        return false;
+      }
+      try{
+        localStorage.setItem('alcoholTrackerData', JSON.stringify(dayData));
+        localStorage.setItem('alcoholTrackerCurrentDate', currentInputDate.toISOString());
+        updateStorageStatus('✅ Daten gespeichert', 'ok');
+        return true;
+      }catch(e){
+        console.error('Storage error', e);
+        updateStorageStatus('❌ Speicher-Fehler', 'error');
+        return false;
+      }
+    }
+
+    function loadData(){
+      if(!storageWorking){
+        updateStorageStatus('⚠️ Kein persistenter Speicher', 'error');
+        return;
+      }
+      try{
+        const savedData = localStorage.getItem('alcoholTrackerData');
+        const savedDate = localStorage.getItem('alcoholTrackerCurrentDate');
+        dayData = savedData && savedData !== 'null' ? JSON.parse(savedData) : {};
+        currentInputDate = savedDate && savedDate !== 'null' ? new Date(savedDate) : new Date();
+        updateStorageStatus(`✅ ${Object.keys(dayData).length} Tage geladen`, 'ok');
+      }catch(e){
+        console.error('Laden fehlgeschlagen', e);
+        dayData = {};
+        currentInputDate = new Date();
+        updateStorageStatus('❌ Laden fehlgeschlagen', 'error');
+      }
+    }
+
+    /* Metrics */
+    function calculateStreak(){
+      let latest = null;
+      for(const key in dayData){
+        const val = dayData[key];
+        if(val==='sober' || val==='superday'){
+          const [y,m,d] = key.split('-').map(Number);
+          const dt = new Date(y,m,d);
+          if(!latest || dt > latest) latest = dt;
         }
+      }
+      if(!latest){ document.getElementById('streakNumber').textContent = '0'; return; }
 
-        function formatDisplayDate(date) {
-            const day = date.getDate();
-            const month = monthNames[date.getMonth()];
-            const year = date.getFullYear();
-            return `${day}. ${month} ${year}`;
-        }
+      let streak = 0;
+      const probe = new Date(latest);
+      for(let i=0;i<400;i++){
+        const key = formatDateKey(probe);
+        const st = dayData[key];
+        if(st==='sober' || st==='superday'){ streak++; probe.setDate(probe.getDate()-1); }
+        else break;
+      }
+      document.getElementById('streakNumber').textContent = String(streak);
+    }
 
-        // STORAGE FUNKTIONEN
-        function testStorage() {
-            try {
-                localStorage.setItem('__test__', 'test');
-                const test = localStorage.getItem('__test__');
-                localStorage.removeItem('__test__');
-                storageWorking = test === 'test';
-                console.log('📊 localStorage working:', storageWorking);
-                return storageWorking;
-            } catch (e) {
-                console.error('❌ localStorage failed:', e);
-                storageWorking = false;
-                return false;
-            }
-        }
+    function calculateSuccessRate(){
+      const y = currentViewDate.getFullYear();
+      const m = currentViewDate.getMonth();
+      let total=0, max=0;
 
-        function saveData() {
-            if (!storageWorking) {
-                updateStorageStatus('❌ Speichern nicht möglich', 'error');
-                return false;
-            }
+      const last = new Date(y, m+1, 0).getDate();
+      for(let d=1; d<=last; d++){
+        const key = formatDateKey(new Date(y,m,d));
+        const st = dayData[key];
+        if(!st) continue;
+        max += 1;
+        if(st==='superday') total += 1.0;
+        else if(st==='sober') total += 0.75;
+        else if(st==='moderate') total += 0.4;
+        else total += 0;
+      }
+      const pct = max>0 ? Math.round((total/max)*100) : 0;
+      const el = document.getElementById('successRate');
+      if(el) el.textContent = pct + '%';
+    }
 
-            try {
-                localStorage.setItem('alcoholTrackerData', JSON.stringify(dayData));
-                localStorage.setItem('alcoholTrackerCurrentDate', currentInputDate.toISOString());
-                
-                const testData = localStorage.getItem('alcoholTrackerData');
-                if (testData) {
-                    updateStorageStatus('✅ Daten gespeichert', 'working');
-                    return true;
-                } else {
-                    updateStorageStatus('❌ Speichern fehlgeschlagen', 'error');
-                    return false;
-                }
-            } catch (e) {
-                console.error('❌ Storage error:', e);
-                updateStorageStatus('❌ Speicher-Fehler', 'error');
-                return false;
-            }
-        }
+    /* Views */
+    function updateDayInputView(){
+      document.getElementById('currentDateDisplay').textContent = formatDisplayDate(currentInputDate);
+      updateStorageStatus(`🍷 ${Object.keys(dayData).length} Tage`, 'ok');
 
-        function loadData() {
-            if (!storageWorking) {
-                updateStorageStatus('⚠️ Kein persistenter Speicher', 'error');
-                return;
-            }
+      const key = formatDateKey(currentInputDate);
+      const existing = dayData[key];
+      const btn = document.getElementById('submitDay');
+      if(existing){
+        const radio = document.querySelector(`input[name="dayChoice"][value="${existing}"]`);
+        if(radio) radio.checked = true;
+        btn.disabled = false;
+        btn.textContent = 'Tag aktualisieren';
+      }else{
+        btn.textContent = 'Tag speichern';
+      }
+    }
 
-            try {
-                const savedData = localStorage.getItem('alcoholTrackerData');
-                const savedDate = localStorage.getItem('alcoholTrackerCurrentDate');
-                
-                if (savedData && savedData !== 'null') {
-                    dayData = JSON.parse(savedData);
-                } else {
-                    dayData = {};
-                }
-                
-                if (savedDate && savedDate !== 'null') {
-                    currentInputDate = new Date(savedDate);
-                } else {
-                    currentInputDate = new Date();
-                }
-                
-                updateStorageStatus(`✅ ${Object.keys(dayData).length} Tage geladen`, 'working');
-                
-            } catch (e) {
-                console.error('❌ Loading error:', e);
-                dayData = {};
-                currentInputDate = new Date();
-                updateStorageStatus('❌ Laden fehlgeschlagen', 'error');
-            }
-        }
+    function showMonthView(){
+      currentViewDate = new Date(currentInputDate);
+      document.getElementById('dayInputView').classList.remove('active');
+      document.getElementById('monthView').classList.add('active');
+      updateMonthView();
+      calculateStreak();
+      calculateSuccessRate();
+    }
 
-        function updateStorageStatus(message, type) {
-            const statusElement = document.getElementById('storageStatus');
-            const infoElement = document.getElementById('storageInfo');
-            const countElement = document.getElementById('savedDaysCount');
-            
-            if (statusElement) {
-                statusElement.textContent = message;
-            }
-            
-            if (countElement) {
-                countElement.textContent = Object.keys(dayData).length;
-            }
-            
-            if (infoElement) {
-                infoElement.className = `storage-info ${type}`;
-            }
-        }
+    function showDayInput(){
+      document.getElementById('monthView').classList.remove('active');
+      document.getElementById('dayInputView').classList.add('active');
+    }
 
-        // STREAK BERECHNUNG (nur alkoholfreie und Supertage zählen)
-        function calculateStreak() {
-            let latestSoberDate = null;
-            
-            // Finde den neuesten alkoholfreien Tag (sober oder superday)
-            for (let dateKey in dayData) {
-                if (dayData[dateKey] === 'sober' || dayData[dateKey] === 'superday') {
-                    const parts = dateKey.split('-');
-                    const year = parseInt(parts[0]);
-                    const month = parseInt(parts[1]);
-                    const day = parseInt(parts[2]);
-                    const date = new Date(year, month, day);
-                    
-                    if (!latestSoberDate || date > latestSoberDate) {
-                        latestSoberDate = date;
-                    }
-                }
-            }
-            
-            if (!latestSoberDate) {
-                document.getElementById('streakNumber').textContent = '0';
-                return;
-            }
-            
-            let streak = 0;
-            let checkDate = new Date(latestSoberDate);
-            
-            for (let i = 0; i < 100; i++) {
-                const key = formatDateKey(checkDate);
-                const status = dayData[key];
-                
-                if (status === 'sober' || status === 'superday') {
-                    streak++;
-                } else {
-                    break;
-                }
-                
-                checkDate.setDate(checkDate.getDate() - 1);
-            }
-            
-            document.getElementById('streakNumber').textContent = streak;
-        }
+    function updateMonthView(){
+      const y = currentViewDate.getFullYear();
+      const m = currentViewDate.getMonth();
+      document.getElementById('monthHeader').textContent = `${monthNames[m]} ${y}`;
 
-        // ERFOLGSQUOTE BERECHNUNG - mit vollständigem Debug
-        function calculateSuccessRate() {
-            const year = currentViewDate.getFullYear();
-            const month = currentViewDate.getMonth();
-            
-            let totalPoints = 0;
-            let maxPossiblePoints = 0;
-            let enteredDays = 0;
-            let debugInfo = [];
-            
-            console.log(`🔍 Analysiere ${monthNames[month]} ${year}...`);
-            console.log('📦 RAW dayData object:', dayData);
-            console.log('📦 Alle Keys in dayData:', Object.keys(dayData));
-            console.log('📦 Anzahl gespeicherter Einträge:', Object.keys(dayData).length);
-            
-            // Zeige alle gespeicherten Daten
-            Object.keys(dayData).forEach(key => {
-                console.log(`🗃️ Gespeichert: "${key}" = "${dayData[key]}"`);
-            });
-            
-            // Alle Tage des aktuellen Monats durchgehen
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const today = new Date();
-            const totalDaysInMonth = lastDay.getDate();
-            
-            console.log(`📅 Prüfe alle ${totalDaysInMonth} Tage des Monats...`);
-            
-            for (let day = 1; day <= totalDaysInMonth; day++) {
-                const currentDay = new Date(year, month, day);
-                
-                // Alle Tage prüfen, auch die in der Zukunft (für bereits eingetragene Daten)
-                const dateKey = formatDateKey(currentDay);
-                const status = dayData[dateKey];
-                
-                console.log(`🗓️ Tag ${day}: Schlüssel="${dateKey}", Status="${status}"`);
-                
-                // NUR eingetragene Tage zählen, aber alle Tage prüfen
-                if (status && status !== 'undefined') {
-                    enteredDays++;
-                    maxPossiblePoints += 1.0;
-                    
-                    if (status === 'superday') {
-                        totalPoints += 1.0;
-                        debugInfo.push(`${day}: Supertag (1.0/1.0)`);
-                    } else if (status === 'sober') {
-                        totalPoints += 0.75;
-                        debugInfo.push(`${day}: Alkoholfrei (0.75/1.0)`);
-                    } else if (status === 'moderate') {
-                        totalPoints += 0.4;
-                        debugInfo.push(`${day}: Moderat (0.4/1.0)`);
-                    } else if (status === 'alcohol') {
-                        totalPoints += 0;
-                        debugInfo.push(`${day}: Alkohol (0/1.0)`);
-                    }
-                }
-            }
-            
-            const successRate = maxPossiblePoints > 0 ? Math.round((totalPoints / maxPossiblePoints) * 100) : 0;
-            
-            // Ergebnis sofort anzeigen
-            const rateElement = document.getElementById('successRate');
-            if (rateElement) {
-                rateElement.textContent = successRate + '%';
-            }
-            
-            console.log(`📊 FINALE BERECHNUNG für ${monthNames[month]} ${year}:`);
-            console.log(`📅 Gefundene eingetragene Tage: ${enteredDays} von ${totalDaysInMonth} möglichen`);
-            console.log(`🔢 Erreichte Punkte: ${totalPoints.toFixed(2)}`);
-            console.log(`🎯 Maximale Punkte: ${maxPossiblePoints}`);
-            console.log(`📈 Erfolgsquote: ${successRate}%`);
-            console.log('📋 Details:', debugInfo);
-        }
+      const grid = document.getElementById('monthGrid');
+      grid.innerHTML = '';
 
-        // HAUPTFUNKTIONEN
-        function saveDay() {
-            const selectedChoice = document.querySelector('input[name="dayChoice"]:checked');
-            if (!selectedChoice) return;
-            
-            const dateKey = formatDateKey(currentInputDate);
-            dayData[dateKey] = selectedChoice.value;
-            
-            const saveSuccess = saveData();
-            
-            // Visuelle Bestätigung
-            const btn = document.getElementById('submitDay');
-            const originalText = btn.textContent;
-            btn.textContent = saveSuccess ? '✅ Gespeichert!' : '❌ Fehler!';
-            btn.style.background = saveSuccess ? '#10b981' : '#ef4444';
-            
-            setTimeout(() => {
-                btn.textContent = originalText;
-                btn.style.background = '#4f46e5';
-            }, 2000);
-            
-            calculateStreak();
-            
-            // Nächster Tag
-            currentInputDate.setDate(currentInputDate.getDate() + 1);
-            updateDayInputView();
-            
-            // Reset
-            document.querySelectorAll('input[name="dayChoice"]').forEach(radio => {
-                radio.checked = false;
-            });
-            btn.disabled = true;
-        }
+      // Week headers
+      for(const w of weekdays){
+        const h = document.createElement('div');
+        h.className = 'weekday';
+        h.textContent = w;
+        grid.appendChild(h);
+      }
 
-        function updateDayInputView() {
-            document.getElementById('currentDateDisplay').textContent = formatDisplayDate(currentInputDate);
-            updateStorageStatus(`🍷 ${Object.keys(dayData).length} Tage`, storageWorking ? 'working' : 'error');
-            
-            const dateKey = formatDateKey(currentInputDate);
-            const existingData = dayData[dateKey];
-            
-            if (existingData) {
-                const radio = document.querySelector(`input[value="${existingData}"]`);
-                if (radio) {
-                    radio.checked = true;
-                    document.getElementById('submitDay').disabled = false;
-                    document.getElementById('submitDay').textContent = 'Tag aktualisieren';
-                }
-            } else {
-                document.getElementById('submitDay').textContent = 'Tag speichern';
-            }
-        }
+      const first = new Date(y, m, 1);
+      const last  = new Date(y, m+1, 0);
+      const startDay = (first.getDay()+6)%7; // Monday first
 
-        function showMonthView() {
-            currentViewDate = new Date(currentInputDate);
-            document.getElementById('dayInputView').classList.remove('active');
-            document.getElementById('monthView').classList.add('active');
-            updateMonthView();
-            calculateStreak();
-            calculateSuccessRate();
-        }
+      // leading empties
+      for(let i=0;i<startDay;i++){
+        const e = document.createElement('div');
+        e.style.visibility='hidden';
+        e.className='day';
+        grid.appendChild(e);
+      }
 
-        function showDayInput() {
-            document.getElementById('monthView').classList.remove('active');
-            document.getElementById('dayInputView').classList.add('active');
-        }
+      const today = new Date();
+      for(let d=1; d<=last.getDate(); d++){
+        const cell = document.createElement('div');
+        cell.className = 'day';
+        cell.textContent = d;
 
-        function updateMonthView() {
-            const year = currentViewDate.getFullYear();
-            const month = currentViewDate.getMonth();
-            
-            document.getElementById('monthHeader').textContent = `${monthNames[month]} ${year}`;
-            
-            const grid = document.getElementById('monthGrid');
-            grid.innerHTML = '';
-            
-            weekdays.forEach(day => {
-                const header = document.createElement('div');
-                header.className = 'weekday-header';
-                header.textContent = day;
-                grid.appendChild(header);
-            });
-            
-            const firstDay = new Date(year, month, 1);
-            const lastDay = new Date(year, month + 1, 0);
-            const startDay = (firstDay.getDay() + 6) % 7;
-            
-            for (let i = 0; i < startDay; i++) {
-                const emptyCell = document.createElement('div');
-                emptyCell.className = 'day-cell empty';
-                grid.appendChild(emptyCell);
-            }
-            
-            const today = new Date();
-            for (let day = 1; day <= lastDay.getDate(); day++) {
-                const dayCell = document.createElement('div');
-                dayCell.className = 'day-cell';
-                dayCell.textContent = day;
-                
-                const dayDate = new Date(year, month, day);
-                const dateKey = formatDateKey(dayDate);
-                const dayStatus = dayData[dateKey];
-                
-                if (dayStatus === 'sober') {
-                    dayCell.classList.add('sober');
-                } else if (dayStatus === 'moderate') {
-                    dayCell.classList.add('moderate');
-                } else if (dayStatus === 'alcohol') {
-                    dayCell.classList.add('alcohol');
-                } else if (dayStatus === 'superday') {
-                    dayCell.classList.add('superday');
-                } else {
-                    dayCell.classList.add('neutral');
-                }
-                
-                if (dayDate.toDateString() === today.toDateString()) {
-                    dayCell.classList.add('today');
-                }
-                
-                dayCell.addEventListener('click', function() {
-                    openEditPopup(dayDate);
-                });
-                
-                grid.appendChild(dayCell);
-            }
-        }
+        const dt = new Date(y, m, d);
+        const key = formatDateKey(dt);
+        const st = dayData[key];
 
-        function openEditPopup(date) {
-            editingDate = date;
-            document.getElementById('editDate').textContent = formatDisplayDate(date);
-            document.getElementById('popupOverlay').classList.add('active');
-            document.getElementById('editPopup').classList.add('active');
-        }
+        if(st) cell.classList.add(st);
+        if(dt.toDateString() === today.toDateString()) cell.classList.add('today');
 
-        function closeEditPopup() {
-            document.getElementById('popupOverlay').classList.remove('active');
-            document.getElementById('editPopup').classList.remove('active');
-            editingDate = null;
-        }
+        cell.addEventListener('click', ()=>openEditPopup(dt));
+        grid.appendChild(cell);
+      }
+    }
 
-        function updateDay(action) {
-            if (!editingDate) return;
-            
-            const dateKey = formatDateKey(editingDate);
-            
-            if (action === 'delete') {
-                delete dayData[dateKey];
-            } else {
-                dayData[dateKey] = action;
-            }
-            
-            saveData();
-            closeEditPopup();
-            updateMonthView();
-            calculateStreak();
-            calculateSuccessRate();
-        }
+    /* Edit popup */
+    function openEditPopup(date){
+      editingDate = date;
+      document.getElementById('editDate').textContent = formatDisplayDate(date);
+      document.getElementById('popupOverlay').classList.add('active');
+      document.getElementById('editPopup').setAttribute('aria-hidden','false');
+    }
+    function closeEditPopup(){
+      document.getElementById('popupOverlay').classList.remove('active');
+      document.getElementById('editPopup').setAttribute('aria-hidden','true');
+      editingDate = null;
+    }
 
-        function previousMonth() {
-            currentViewDate.setMonth(currentViewDate.getMonth() - 1);
-            updateMonthView();
-            calculateSuccessRate();
-        }
+    function updateDay(action){
+      if(!editingDate) return;
+      const key = formatDateKey(editingDate);
+      if(action==='delete') delete dayData[key];
+      else dayData[key] = action;
 
-        function nextMonth() {
-            currentViewDate.setMonth(currentViewDate.getMonth() + 1);
-            updateMonthView();
-            calculateSuccessRate();
-        }
+      saveData();
+      closeEditPopup();
+      updateMonthView();
+      calculateStreak();
+      calculateSuccessRate();
+    }
 
-        function clearAllData() {
-            console.log('🗑️ Lösch-Button geklickt');
-            
-            // Robuste Bestätigung
-            try {
-                const userConfirmed = confirm('⚠️ ACHTUNG: Alle Alkohol-Tracker Daten werden dauerhaft gelöscht!\n\nDiese Aktion kann NICHT rückgängig gemacht werden.\n\nWirklich alle Daten löschen?');
-                console.log('🤔 Benutzer-Antwort:', userConfirmed);
-                
-                if (userConfirmed === true) {
-                    console.log('✅ Löschung bestätigt - führe Löschung durch');
-                    dayData = {};
-                    currentInputDate = new Date();
-                    
-                    if (storageWorking) {
-                        localStorage.removeItem('alcoholTrackerData');
-                        localStorage.removeItem('alcoholTrackerCurrentDate');
-                        console.log('🗑️ LocalStorage geleert');
-                    }
-                    
-                    updateMonthView();
-                    calculateStreak();
-                    calculateSuccessRate();
-                    updateDayInputView();
-                    console.log('✅ Alle Daten erfolgreich gelöscht');
-                    alert('✅ Alle Daten wurden erfolgreich gelöscht!');
-                } else {
-                    console.log('❌ Löschung vom Benutzer abgebrochen');
-                }
-            } catch (error) {
-                console.error('❌ Fehler bei Bestätigungsdialog:', error);
-                // Fallback ohne Bestätigung wenn Dialog blockiert wird
-                const fallbackConfirm = prompt('Browser blockiert Bestätigung. Tippen Sie "LÖSCHEN" um alle Daten zu löschen:');
-                if (fallbackConfirm === 'LÖSCHEN') {
-                    dayData = {};
-                    currentInputDate = new Date();
-                    if (storageWorking) {
-                        localStorage.removeItem('alcoholTrackerData');
-                        localStorage.removeItem('alcoholTrackerCurrentDate');
-                    }
-                    updateMonthView();
-                    calculateStreak();
-                    calculateSuccessRate();
-                    updateDayInputView();
-                    alert('✅ Alle Daten wurden gelöscht!');
-                }
-            }
-        }
+    function previousMonth(){
+      currentViewDate.setMonth(currentViewDate.getMonth()-1);
+      updateMonthView();
+      calculateSuccessRate();
+    }
+    function nextMonth(){
+      currentViewDate.setMonth(currentViewDate.getMonth()+1);
+      updateMonthView();
+      calculateSuccessRate();
+    }
 
-        // Funktionen global verfügbar machen
-        window.clearAllData = clearAllData;
-        window.showMonthView = showMonthView;
-        window.showDayInput = showDayInput;
-        window.previousMonth = previousMonth;
-        window.nextMonth = nextMonth;
-        window.openEditPopup = openEditPopup;
-        window.closeEditPopup = closeEditPopup;
-        window.updateDay = updateDay;
+    /* Save day */
+    function saveDay(){
+      const selected = document.querySelector('input[name="dayChoice"]:checked');
+      if(!selected) return;
+      const key = formatDateKey(currentInputDate);
+      dayData[key] = selected.value;
 
-        // INITIALIZATION
-        document.addEventListener('DOMContentLoaded', function() {
-            testStorage();
-            loadData();
-            
-            document.querySelectorAll('input[name="dayChoice"]').forEach(radio => {
-                radio.addEventListener('change', function() {
-                    document.getElementById('submitDay').disabled = false;
-                });
-            });
-            
-            document.getElementById('submitDay').addEventListener('click', saveDay);
-            
-            updateDayInputView();
-        });
-    </script>
+      const btn = document.getElementById('submitDay');
+      const ok = saveData();
+      const label = btn.textContent;
+      btn.textContent = ok ? '✅ Gespeichert!' : '❌ Fehler!';
+      setTimeout(()=>btn.textContent = label, 1200);
+
+      calculateStreak();
+
+      // advance one day
+      currentInputDate.setDate(currentInputDate.getDate()+1);
+      updateDayInputView();
+
+      // reset radios
+      document.querySelectorAll('input[name="dayChoice"]').forEach(r=>r.checked=false);
+      btn.disabled = true;
+    }
+
+    /* Expose */
+    window.showMonthView = showMonthView;
+    window.showDayInput = showDayInput;
+    window.previousMonth = previousMonth;
+    window.nextMonth = nextMonth;
+    window.openEditPopup = openEditPopup;
+    window.closeEditPopup = closeEditPopup;
+    window.updateDay = updateDay;
+
+    /* Init */
+    document.addEventListener('DOMContentLoaded', ()=>{
+      testStorage();
+      loadData();
+
+      document.querySelectorAll('input[name="dayChoice"]').forEach(radio=>{
+        radio.addEventListener('change', ()=>{ document.getElementById('submitDay').disabled = false; });
+      });
+      document.getElementById('submitDay').addEventListener('click', saveDay);
+
+      updateDayInputView();
+    });
+  </script>
 </body>
 </html>
