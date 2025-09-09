@@ -15,7 +15,6 @@
       --primary:#4f46e5;
       --primary-dark:#4338ca;
       --success:#10b981;
-      --success-dark:#047857;   /* für ≥30 */
       --warn:#f59e0b;
       --danger:#ef4444;
       --super:#059669;
@@ -107,40 +106,26 @@
     .btn:hover{ background: var(--primary-dark); transform: translateY(-1px); }
     .btn:disabled{ background:#cbd5e1; box-shadow:none; cursor:not-allowed; }
 
-    .btn.secondary{ background:#64748b; box-shadow: 0 8px 18px rgba(100,116,139,.2); }
+    .btn.secondary{
+      background:#64748b;
+      box-shadow: 0 8px 18px rgba(100,116,139,.2);
+    }
     .btn.secondary:hover{ background:#475569; }
 
-    .btn.danger{ background:#ef4444; box-shadow: 0 8px 18px rgba(239,68,68,.2); }
-    .btn.danger:hover{ background:#dc2626; }
-
     .submit-row{ margin-top: 12px; display:flex; gap:12px; }
-    .storage-info{ margin-top: 10px; text-align:center; color:var(--muted); font-size:14px; }
+    .storage-info{
+      margin-top: 10px; text-align:center; color:var(--muted); font-size:14px;
+    }
 
     /* Monatsübersicht */
     .stats-grid{
-      display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom: 12px;
+      display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom: 16px;
     }
     .stat-card{
-      background:#f9fafb;            /* leicht hinterlegt */
-      border:1px solid #e5e7eb;
-      border-radius: 14px;
-      padding:16px;
-      text-align:center;
-      transition: background .2s ease, border-color .2s ease, color .2s ease;
+      background:#f8fafc; border:1px solid #e5e7eb; border-radius: 14px; padding:16px; text-align:center;
     }
     .stat-card .stat-number{ font-size: clamp(28px, 4.8vw, 40px); font-weight:900; margin: 6px 0 2px; }
     .stat-card .stat-label{ color:var(--muted); font-size: 13px; }
-
-    /* Erfolgsquote Ampel */
-    .rate-good{ background:#ecfdf5; border-color:#a7f3d0; }
-    .rate-warn{ background:#fffbeb; border-color:#fde68a; }
-    .rate-bad { background:#fef2f2; border-color:#fecaca; }
-
-    /* Streak Ampel */
-    .streak-bad { background:#fef2f2; border-color:#fecaca; }
-    .streak-warn{ background:#fffbeb; border-color:#fde68a; }
-    .streak-good{ background:#ecfdf5; border-color:#a7f3d0; }
-    .streak-great{ background:#d1fae5; border-color:#34d399; } /* dunkler/grüner */
 
     .legend{
       display:flex; flex-wrap:wrap; gap:10px 14px; margin: 10px 0 14px; color:var(--muted); font-size: 13px;
@@ -169,7 +154,7 @@
 
     /* Spendenbereich */
     .support{
-      background:#f8fafc; border:1px solid #e5e7eb; border-radius: 14px; padding: 14px; margin: 12px 0 12px;
+      background:#f8fafc; border:1px solid #e5e7eb; border-radius: 14px; padding: 14px; margin: 8px 0 12px;
       text-align:center;
     }
     .support p{ margin: 0 0 12px; }
@@ -188,28 +173,50 @@
       display:block; height:48px; width:auto; border-radius:12px;
       box-shadow: 0 8px 18px rgba(0,0,0,.08);
     }
+
+    /* Mobile Fix */
     @media (max-width: 420px){
       #kofi-holder iframe{ height:44px !important; }
       #bmc-holder img{ height:44px; }
     }
 
-    /* Month header + Top Nav */
+    /* Month header (nur Titel) */
     .month-head{
       display:flex; align-items:center; justify-content:center; gap:10px; margin: 10px 0 6px;
     }
     .month-title{ font-weight: 800; font-size: 20px; }
 
+    /* Top Nav (Vorheriger/Nächster über dem Rest) */
     .month-top-nav{
-      display:flex; gap:10px; justify-content:center; margin: 8px 0 14px;
+      display:flex; gap:10px; justify-content:center; margin: 10px 0 14px;
     }
     .month-top-nav .btn{ width:auto; min-width: 140px; }
     @media (max-width:420px){ .month-top-nav .btn{ min-width: 120px; } }
 
-    /* Reset-Bar ganz unten */
-    .reset-bar{
-      margin-top: 16px;
-      display:flex;
-      justify-content:center;
+    /* Edit-Karte (ohne Overlay) */
+    .edit-pop{
+      position: fixed; left:50%; top: 18px; transform: translateX(-50%);
+      background:#ffffff; border:1px solid #e5e7eb; border-radius:16px; box-shadow: var(--shadow);
+      padding:14px; width: min(560px, 92vw); display:none; z-index: 50;
+    }
+    .edit-pop.active{ display:block; }
+    .edit-title{ font-weight:800; font-size:18px; margin: 4px 0 8px; color:#111827; }
+    .edit-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    @media (max-width:560px){ .edit-grid{ grid-template-columns: 1fr; } }
+    .edit-option{
+      width:100%; padding:12px 14px; border-radius:12px; border:2px solid #edf2f7; background:#fff; cursor:pointer; text-align:left;
+      transition:.12s ease; font-size:15px;
+    }
+    .edit-option:hover{ transform: translateY(-1px); box-shadow: 0 8px 18px rgba(0,0,0,.08); }
+    .edit-option.sober{ border-color:#c0f1df; background:#f4fffa; }
+    .edit-option.moderate{ border-color:#ffe5b5; background:#fff9ec; }
+    .edit-option.alcohol{ border-color:#ffcaca; background:#fff2f2; }
+    .edit-option.superday{ border-color:#b7f3d2; background:linear-gradient(135deg,#f6fff9,#f1fff7); position:relative; }
+    .edit-option.superday::after{ content:"⭐"; position:absolute; right:14px; top:50%; transform:translateY(-50%); }
+    .edit-option.delete{ border-color:#e2e8f0; background:#f8fafc; }
+
+    footer{
+      margin-top: 18px; text-align:center; color:#475569; font-size: 13px;
     }
   </style>
 </head>
@@ -268,12 +275,12 @@
       </div>
 
       <div class="stats-grid">
-        <div class="stat-card" id="streakCard">
+        <div class="stat-card">
           <div class="stat-label">Aktueller Streak</div>
           <div class="stat-number" id="streakNumber">0</div>
           <div class="stat-label">alkoholfreie Tage</div>
         </div>
-        <div class="stat-card" id="successCard">
+        <div class="stat-card">
           <div class="stat-label">Erfolgsquote</div>
           <div class="stat-number" id="successRate">0%</div>
           <div class="stat-label">diesen Monat</div>
@@ -290,19 +297,19 @@
 
       <div id="monthGrid" class="cal" aria-label="Kalender"></div>
 
-      <!-- Spenden-Hinweis + Buttons (Ko-fi/PayPal zuerst, dann BMC/Stripe) -->
+      <!-- Spenden-Hinweis + Buttons (BMC zuerst, Ko-fi danach) -->
       <section class="support">
         <p><strong>Anwendung nützlich?</strong> Spendier mir doch einen Kaffee durch Klick auf den Button!</p>
         <div class="support-buttons">
-          <!-- Ko-fi (PayPal) – ERSTER Button -->
-          <div id="kofi-holder" class="btn-holder">
-            <div id="kofi-widget" aria-label="Ko-fi Unterstützungsbutton"></div>
-          </div>
-          <!-- Buy Me a Coffee (Stripe) – ZWEITER Button -->
+          <!-- Buy Me a Coffee (Stripe) – ERSTER Button -->
           <div id="bmc-holder" class="btn-holder">
             <a href="https://www.buymeacoffee.com/rduwenbecky">
               <img src="https://img.buymeacoffee.com/button-api/?text=Spendier ´n Kaffee (Stripe)&emoji=☕&slug=rduwenbecky&button_colour=5F7FFF&font_colour=ffffff&font_family=Lato&outline_colour=000000&coffee_colour=FFDD00" alt="Buy Me a Coffee Button" />
             </a>
+          </div>
+          <!-- Ko-fi (PayPal) – ZWEITER Button -->
+          <div id="kofi-holder" class="btn-holder">
+            <div id="kofi-widget" aria-label="Ko-fi Unterstützungsbutton"></div>
           </div>
         </div>
         <!-- Ko-fi Widget Script & Init -->
@@ -314,11 +321,6 @@
           } catch(e){ console.warn('Ko-fi Widget konnte nicht geladen werden.', e); }
         </script>
       </section>
-
-      <!-- Reset ganz unten -->
-      <div class="reset-bar">
-        <button class="btn danger" onclick="resetStorage()">🧹 Lokalen Speicher löschen</button>
-      </div>
     </div>
 
     <!-- Edit-Karte (ohne Overlay) -->
@@ -407,13 +409,28 @@
       }
     }
 
-    /* Metriken: Erfolgsquote */
-    function setSuccessCardTint(pct){
-      const card = document.getElementById('successCard');
-      card.classList.remove('rate-good','rate-warn','rate-bad');
-      if(pct < 50)      card.classList.add('rate-bad');
-      else if(pct < 75) card.classList.add('rate-warn');
-      else              card.classList.add('rate-good');
+    /* Metriken */
+    function calculateStreak(){
+      let latest = null;
+      for(const key in dayData){
+        const val = dayData[key];
+        if(val==='sober' || val==='superday'){
+          const [y,m,d] = key.split('-').map(Number);
+          const dt = new Date(y,m,d);
+          if(!latest || dt > latest) latest = dt;
+        }
+      }
+      if(!latest){ document.getElementById('streakNumber').textContent = '0'; return; }
+
+      let streak = 0;
+      const probe = new Date(latest);
+      for(let i=0;i<400;i++){
+        const key = formatDateKey(probe);
+        const st = dayData[key];
+        if(st==='sober' || st==='superday'){ streak++; probe.setDate(probe.getDate()-1); }
+        else break;
+      }
+      document.getElementById('streakNumber').textContent = String(streak);
     }
 
     function calculateSuccessRate(){
@@ -430,48 +447,11 @@
         if(st==='superday') total += 1.0;
         else if(st==='sober') total += 0.75;
         else if(st==='moderate') total += 0.4;
+        else total += 0;
       }
       const pct = max>0 ? Math.round((total/max)*100) : 0;
       const el = document.getElementById('successRate');
       if(el) el.textContent = pct + '%';
-      setSuccessCardTint(pct);
-    }
-
-    /* Metriken: Streak */
-    function setStreakCardTint(streak){
-      const card = document.getElementById('streakCard');
-      const numEl = document.getElementById('streakNumber');
-      card.classList.remove('streak-bad','streak-warn','streak-good','streak-great');
-
-      let suffix = '';
-      if(streak >= 30){
-        card.classList.add('streak-great');    // dunkelgrün
-        suffix = ' 🎉';
-      }else if(streak >= 21){
-        card.classList.add('streak-good');     // grün
-      }else if(streak >= 11){
-        card.classList.add('streak-warn');     // gelb
-      }else if(streak >= 1){
-        card.classList.add('streak-bad');      // rot
-      }
-      numEl.textContent = String(streak) + suffix;
-    }
-
-    // Aktueller Streak: ab HEUTE rückwärts zählen
-    function calculateStreak(){
-      let streak = 0;
-      const probe = new Date(); // heute
-      for(let i=0;i<450;i++){
-        const key = formatDateKey(probe);
-        const st = dayData[key];
-        if(st==='sober' || st==='superday'){
-          streak++;
-          probe.setDate(probe.getDate()-1);
-        }else{
-          break;
-        }
-      }
-      setStreakCardTint(streak);
     }
 
     /* Views */
@@ -584,13 +564,11 @@
     function previousMonth(){
       currentViewDate.setMonth(currentViewDate.getMonth()-1);
       updateMonthView();
-      calculateStreak();
       calculateSuccessRate();
     }
     function nextMonth(){
       currentViewDate.setMonth(currentViewDate.getMonth()+1);
       updateMonthView();
-      calculateStreak();
       calculateSuccessRate();
     }
 
@@ -607,7 +585,6 @@
       btn.textContent = ok ? '✅ Gespeichert!' : '❌ Fehler!';
       setTimeout(()=>btn.textContent = label, 1200);
 
-      // Nach Speichern Streak neu färben
       calculateStreak();
 
       // Nächster Tag
@@ -619,19 +596,6 @@
       btn.disabled = true;
     }
 
-    /* Reset-Button mit Bestätigung */
-    function resetStorage(){
-      const ok = confirm('⚠️ Wirklich ALLE lokalen Daten (Tage + Einstellungen) löschen und neu starten?');
-      if(!ok) return;
-      try{
-        localStorage.removeItem('alcoholTrackerData');
-        localStorage.removeItem('alcoholTrackerCurrentDate');
-      }catch(e){
-        console.warn('Konnte LocalStorage nicht bereinigen:', e);
-      }
-      location.reload();
-    }
-
     // Expose
     window.showMonthView = showMonthView;
     window.showDayInput = showDayInput;
@@ -640,7 +604,6 @@
     window.openEditPopup = openEditPopup;
     window.closeEditPopup = closeEditPopup;
     window.updateDay = updateDay;
-    window.resetStorage = resetStorage;
 
     // Init
     document.addEventListener('DOMContentLoaded', ()=>{
