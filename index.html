@@ -6,13 +6,13 @@
   <title>Alkohol Tracker</title>
   <style>
     :root{
-      --bg-grad-start:#6ea8ff;       /* freundlicheres Blau */
-      --bg-grad-end:#8ee5ff;         /* helles Cyan */
+      --bg-grad-start:#6ea8ff;
+      --bg-grad-end:#8ee5ff;
       --card-bg:#ffffff;
       --card-border:#e6eaf1;
-      --text:#1f2937;                /* slate-800 */
-      --muted:#64748b;               /* slate-500 */
-      --primary:#4f46e5;             /* indigo-600 */
+      --text:#1f2937;
+      --muted:#64748b;
+      --primary:#4f46e5;
       --primary-dark:#4338ca;
       --success:#10b981;
       --warn:#f59e0b;
@@ -131,6 +131,8 @@
       display:flex; align-items:center; justify-content:space-between; gap:10px; margin: 10px 0 12px;
     }
     .month-title{ font-weight: 800; font-size: 20px; }
+    .month-nav{ display:flex; gap:8px; }
+    .month-nav .btn{ width:auto; min-width: 140px; }
 
     .legend{
       display:flex; flex-wrap:wrap; gap:10px 14px; margin: 10px 0 14px; color:var(--muted); font-size: 13px;
@@ -138,7 +140,7 @@
     .legend .dot{ width:14px; height:14px; border-radius:4px; display:inline-block; margin-right:6px; vertical-align:middle; }
 
     .cal{
-      display:grid; grid-template-columns: repeat(7, 1fr); gap:8px; margin-bottom: 18px;
+      display:grid; grid-template-columns: repeat(7, 1fr); gap:8px; margin-bottom: 10px;
     }
     .weekday{
       text-align:center; font-weight:700; font-size:12px; color:#475569; padding:6px 0;
@@ -157,7 +159,7 @@
     .day.superday::after{ content:"⭐"; position:absolute; top:4px; right:6px; font-size:12px; }
     .day.today{ outline:3px solid var(--primary); background:#eef2ff; color:#111827; }
 
-    /* Ko-fi / BMC Bereich */
+    /* Spendenbereich */
     .support{
       background:#f8fafc; border:1px solid #e5e7eb; border-radius: 14px; padding: 14px; margin: 8px 0 16px;
       text-align:center;
@@ -166,25 +168,31 @@
     .support-buttons{
       display:flex; flex-wrap:wrap; gap:12px; justify-content:center; align-items:center;
     }
-
-    /* — Vereinheitlichung der Button-Höhen (Ko-fi & BMC) — */
     .support-buttons .btn-holder{
-      height:48px;              /* gemeinsame Zielhöhe */
-      display:flex; align-items:center; justify-content:center;
+      height:48px; display:flex; align-items:center; justify-content:center;
     }
-    /* BuyMeACoffee rendert <a> – hier Angleichen */
-    .support-buttons #bmc-holder a{
-      display:inline-flex !important; align-items:center; justify-content:center; height:48px !important;
-      border-radius:12px !important;
-      box-shadow: 0 8px 18px rgba(0,0,0,.08) !important;
-    }
-    /* Ko-fi rendert iFrame – Höhe angleichen */
-    .support-buttons #kofi-holder iframe{
+    /* Ko-fi zuerst */
+    .support-buttons #kofi-holder{ order: 0; }
+    .support-buttons #bmc-holder{ order: 1; }
+
+    /* Angleichen der tatsächlichen Button-Höhen */
+    #kofi-holder iframe{
       height:48px !important; min-height:48px !important;
-      transform-origin: center center;
+    }
+    #bmc-holder a{
+      display:inline-flex !important; align-items:center; justify-content:center;
+      height:48px !important; border-radius:12px !important; box-shadow: 0 8px 18px rgba(0,0,0,.08) !important;
+      padding: 0 16px !important; white-space: nowrap !important;
     }
 
-    /* Edit-„Popup“ OHNE dunkles Overlay */
+    /* Mobile Fix: Schrift bricht nicht über Button hinaus */
+    @media (max-width: 420px){
+      #bmc-holder a{ height:44px !important; padding: 0 12px !important; font-size: 14px !important; }
+      #kofi-holder iframe{ height:44px !important; }
+      .month-nav .btn{ min-width: 120px; }
+    }
+
+    /* Edit-Karte (ohne dunkles Overlay) */
     .edit-pop{
       position: fixed; left:50%; top: 18px; transform: translateX(-50%);
       background:#ffffff; border:1px solid #e5e7eb; border-radius:16px; box-shadow: var(--shadow);
@@ -203,7 +211,7 @@
     .edit-option.moderate{ border-color:#ffe5b5; background:#fff9ec; }
     .edit-option.alcohol{ border-color:#ffcaca; background:#fff2f2; }
     .edit-option.superday{ border-color:#b7f3d2; background:linear-gradient(135deg,#f6fff9,#f1fff7); position:relative; }
-    .edit-option.superday::after{ content:"⭐"; position:absolute; right:14px; top:50%; transform: translateY(-50%); }
+    .edit-option.superday::after{ content:"⭐"; position:absolute; right:14px; top:50%; transform:translateY(-50%); }
     .edit-option.delete{ border-color:#e2e8f0; background:#f8fafc; }
 
     footer{
@@ -213,7 +221,7 @@
 </head>
 <body>
   <div class="container">
-    <!-- Tag-Eingabe Ansicht (Start wie zuvor) -->
+    <!-- Tag-Eingabe Ansicht (Start immer heute) -->
     <div id="dayInputView" class="view active">
       <h1>🍷 Alkohol Tracker</h1>
       <div class="current-date" id="currentDateDisplay"></div>
@@ -255,11 +263,11 @@
     <div id="monthView" class="view">
       <h1>📊 Alkohol-Übersicht</h1>
 
-      <!-- Spenden-Hinweis + Buttons (Singular-Text) -->
+      <!-- Spenden-Hinweis + Ko-fi (zuerst) + BMC -->
       <section class="support">
         <p><strong>Anwendung nützlich?</strong> Spendier mir doch einen Kaffee durch Klick auf den Button!</p>
         <div class="support-buttons">
-          <!-- Ko-fi -->
+          <!-- Ko-fi (zuerst) -->
           <div id="kofi-holder" class="btn-holder">
             <div id="kofi-widget" aria-label="Ko-fi Unterstützungsbutton"></div>
           </div>
@@ -280,11 +288,10 @@
             ></script>
           </div>
         </div>
-        <!-- Neuer Ko-fi Button (Widget v2) -->
+        <!-- Ko-fi Widget -->
         <script type="text/javascript" src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
         <script type="text/javascript">
           try {
-            // Falls der „neue“ Button andere Parameter braucht, hier einfach anpassen:
             kofiwidget2.init('Spendier mir nen Kaffee Ko-fi', '#72a4f2', 'R5R319DK8N');
             kofiwidget2.draw();
           } catch (e) { console.warn('Ko-fi Widget konnte nicht geladen werden.', e); }
@@ -306,7 +313,7 @@
 
       <div class="month-head">
         <div class="month-title" id="monthHeader">—</div>
-        <div style="display:flex; gap:8px;">
+        <div class="month-nav">
           <button class="btn secondary" onclick="previousMonth()">← Vorheriger</button>
           <button class="btn" onclick="nextMonth()">Nächster →</button>
         </div>
@@ -322,11 +329,7 @@
 
       <div id="monthGrid" class="cal" aria-label="Kalender"></div>
 
-      <div class="submit-row">
-        <button class="btn secondary" onclick="showDayInput()">← Zurück zur Eingabe</button>
-        <button class="btn" onclick="previousMonth()">← Vorheriger Monat</button>
-        <button class="btn" onclick="nextMonth()">Nächster Monat →</button>
-      </div>
+      <!-- Untere Navigationsleiste entfernt (nur oben Vorheriger/Nächster) -->
     </div>
 
     <!-- Edit-Karte (ohne dunkles Overlay) -->
@@ -389,6 +392,7 @@
       if(!storageWorking){ updateStorageStatus('❌ Speichern nicht möglich'); return false; }
       try{
         localStorage.setItem('alcoholTrackerData', JSON.stringify(dayData));
+        // Datum speichern ist OK – aber beim Start trotzdem immer "heute"
         localStorage.setItem('alcoholTrackerCurrentDate', currentInputDate.toISOString());
         updateStorageStatus('✅ Daten gespeichert');
         return true;
@@ -403,14 +407,14 @@
       if(!storageWorking){ updateStorageStatus('⚠️ Kein persistenter Speicher'); return; }
       try{
         const savedData = localStorage.getItem('alcoholTrackerData');
-        const savedDate = localStorage.getItem('alcoholTrackerCurrentDate');
+        // savedDate bewusst ignoriert, damit IMMER heute startet
         dayData = savedData && savedData !== 'null' ? JSON.parse(savedData) : {};
-        currentInputDate = savedDate && savedDate !== 'null' ? new Date(savedDate) : new Date();
+        currentInputDate = new Date();  // <-- Immer heutiges Datum verwenden
         updateStorageStatus(`✅ ${Object.keys(dayData).length} Tage geladen`);
       }catch(e){
         console.error('Laden fehlgeschlagen', e);
         dayData = {};
-        currentInputDate = new Date();
+        currentInputDate = new Date();  // <-- Fallback ebenfalls "heute"
         updateStorageStatus('❌ Laden fehlgeschlagen');
       }
     }
@@ -539,7 +543,7 @@
       }
     }
 
-    /* Edit ohne dunkles Overlay */
+    /* Edit ohne Overlay */
     function openEditPopup(date){
       editingDate = date;
       const pop = document.getElementById('editPopup');
@@ -622,6 +626,5 @@
       updateDayInputView();
     });
   </script>
-  <!-- Ko-fi Widget wird oben im Support-Block initialisiert -->
 </body>
 </html>
