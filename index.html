@@ -127,13 +127,6 @@
     .stat-card .stat-number{ font-size: clamp(28px, 4.8vw, 40px); font-weight:900; margin: 6px 0 2px; }
     .stat-card .stat-label{ color:var(--muted); font-size: 13px; }
 
-    .month-head{
-      display:flex; align-items:center; justify-content:space-between; gap:10px; margin: 10px 0 12px;
-    }
-    .month-title{ font-weight: 800; font-size: 20px; }
-    .month-nav{ display:flex; gap:8px; }
-    .month-nav .btn{ width:auto; min-width: 140px; }
-
     .legend{
       display:flex; flex-wrap:wrap; gap:10px 14px; margin: 10px 0 14px; color:var(--muted); font-size: 13px;
     }
@@ -161,7 +154,7 @@
 
     /* Spendenbereich */
     .support{
-      background:#f8fafc; border:1px solid #e5e7eb; border-radius: 14px; padding: 14px; margin: 8px 0 16px;
+      background:#f8fafc; border:1px solid #e5e7eb; border-radius: 14px; padding: 14px; margin: 8px 0 12px;
       text-align:center;
     }
     .support p{ margin: 0 0 12px; }
@@ -172,27 +165,38 @@
       height:48px; display:flex; align-items:center; justify-content:center;
     }
     /* Ko-fi zuerst */
-    .support-buttons #kofi-holder{ order: 0; }
-    .support-buttons #bmc-holder{ order: 1; }
+    .support-buttons #kofi-holder{ order:0; }
+    .support-buttons #bmc-holder{ order:1; }
 
-    /* Angleichen der tatsächlichen Button-Höhen */
+    /* Einheitliche Button-Höhe */
     #kofi-holder iframe{
       height:48px !important; min-height:48px !important;
     }
-    #bmc-holder a{
-      display:inline-flex !important; align-items:center; justify-content:center;
-      height:48px !important; border-radius:12px !important; box-shadow: 0 8px 18px rgba(0,0,0,.08) !important;
-      padding: 0 16px !important; white-space: nowrap !important;
+    #bmc-holder img{
+      display:block; height:48px; width:auto; border-radius:12px;
+      box-shadow: 0 8px 18px rgba(0,0,0,.08);
     }
 
-    /* Mobile Fix: Schrift bricht nicht über Button hinaus */
+    /* Mobile Fix */
     @media (max-width: 420px){
-      #bmc-holder a{ height:44px !important; padding: 0 12px !important; font-size: 14px !important; }
       #kofi-holder iframe{ height:44px !important; }
-      .month-nav .btn{ min-width: 120px; }
+      #bmc-holder img{ height:44px; }
     }
 
-    /* Edit-Karte (ohne dunkles Overlay) */
+    /* Month header (nur Titel) */
+    .month-head{
+      display:flex; align-items:center; justify-content:center; gap:10px; margin: 10px 0 6px;
+    }
+    .month-title{ font-weight: 800; font-size: 20px; }
+
+    /* Bottom Nav */
+    .month-bottom-nav{
+      display:flex; gap:10px; justify-content:center; margin-top: 12px;
+    }
+    .month-bottom-nav .btn{ width:auto; min-width: 140px; }
+    @media (max-width:420px){ .month-bottom-nav .btn{ min-width: 120px; } }
+
+    /* Edit-Karte (ohne Overlay) */
     .edit-pop{
       position: fixed; left:50%; top: 18px; transform: translateX(-50%);
       background:#ffffff; border:1px solid #e5e7eb; border-radius:16px; box-shadow: var(--shadow);
@@ -263,40 +267,9 @@
     <div id="monthView" class="view">
       <h1>📊 Alkohol-Übersicht</h1>
 
-      <!-- Spenden-Hinweis + Ko-fi (zuerst) + BMC -->
-      <section class="support">
-        <p><strong>Anwendung nützlich?</strong> Spendier mir doch einen Kaffee durch Klick auf den Button!</p>
-        <div class="support-buttons">
-          <!-- Ko-fi (zuerst) -->
-          <div id="kofi-holder" class="btn-holder">
-            <div id="kofi-widget" aria-label="Ko-fi Unterstützungsbutton"></div>
-          </div>
-          <!-- Buy Me a Coffee -->
-          <div id="bmc-holder" class="btn-holder">
-            <script
-              type="text/javascript"
-              src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js"
-              data-name="bmc-button"
-              data-slug="rduwenbecky"
-              data-color="#40DCA5"
-              data-emoji="☕"
-              data-font="Cookie"
-              data-text="Spendier mir einen Kaffee"
-              data-outline-color="#000000"
-              data-font-color="#ffffff"
-              data-coffee-color="#FFDD00"
-            ></script>
-          </div>
-        </div>
-        <!-- Ko-fi Widget -->
-        <script type="text/javascript" src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
-        <script type="text/javascript">
-          try {
-            kofiwidget2.init('Spendier mir nen Kaffee Ko-fi', '#72a4f2', 'R5R319DK8N');
-            kofiwidget2.draw();
-          } catch (e) { console.warn('Ko-fi Widget konnte nicht geladen werden.', e); }
-        </script>
-      </section>
+      <div class="month-head">
+        <div class="month-title" id="monthHeader">—</div>
+      </div>
 
       <div class="stats-grid">
         <div class="stat-card">
@@ -311,14 +284,6 @@
         </div>
       </div>
 
-      <div class="month-head">
-        <div class="month-title" id="monthHeader">—</div>
-        <div class="month-nav">
-          <button class="btn secondary" onclick="previousMonth()">← Vorheriger</button>
-          <button class="btn" onclick="nextMonth()">Nächster →</button>
-        </div>
-      </div>
-
       <div class="legend">
         <span><span class="dot" style="background: var(--success)"></span>Alkoholfrei</span>
         <span><span class="dot" style="background: var(--warn)"></span>Moderat</span>
@@ -329,10 +294,39 @@
 
       <div id="monthGrid" class="cal" aria-label="Kalender"></div>
 
-      <!-- Untere Navigationsleiste entfernt (nur oben Vorheriger/Nächster) -->
+      <!-- Spenden-Hinweis + Ko-fi (PAYPAL) zuerst + BMC (Stripe) -->
+      <section class="support">
+        <p><strong>Anwendung nützlich?</strong> Spendier mir doch einen Kaffee durch Klick auf den Button!</p>
+        <div class="support-buttons">
+          <!-- Ko-fi (PAYPAL) – zuerst -->
+          <div id="kofi-holder" class="btn-holder">
+            <div id="kofi-widget" aria-label="Ko-fi Unterstützungsbutton"></div>
+          </div>
+          <!-- Buy Me a Coffee (Stripe) – zweiter Bild-Button -->
+          <div id="bmc-holder" class="btn-holder">
+            <a href="https://www.buymeacoffee.com/rduwenbecky">
+              <img src="https://img.buymeacoffee.com/button-api/?text=Spendier ´n Kaffee (Stripe)&emoji=☕&slug=rduwenbecky&button_colour=5F7FFF&font_colour=ffffff&font_family=Lato&outline_colour=000000&coffee_colour=FFDD00" alt="Buy Me a Coffee Button" />
+            </a>
+          </div>
+        </div>
+        <!-- Ko-fi Widget Script & Init -->
+        <script type='text/javascript' src='https://storage.ko-fi.com/cdn/widget/Widget_2.js'></script>
+        <script type='text/javascript'>
+          try {
+            kofiwidget2.init('Spendier ´n Kaffee PAYPAL', '#72a4f2', 'R5R319DK8N');
+            kofiwidget2.draw();
+          } catch(e){ console.warn('Ko-fi Widget konnte nicht geladen werden.', e); }
+        </script>
+      </section>
+
+      <!-- Bottom Navigation: nur Vorheriger/Nächster -->
+      <div class="month-bottom-nav">
+        <button class="btn secondary" onclick="previousMonth()">← Vorheriger</button>
+        <button class="btn" onclick="nextMonth()">Nächster →</button>
+      </div>
     </div>
 
-    <!-- Edit-Karte (ohne dunkles Overlay) -->
+    <!-- Edit-Karte (ohne Overlay) -->
     <div id="editPopup" class="edit-pop" aria-hidden="true">
       <div class="edit-title" id="editDate">Datum</div>
       <div class="edit-grid">
@@ -392,7 +386,7 @@
       if(!storageWorking){ updateStorageStatus('❌ Speichern nicht möglich'); return false; }
       try{
         localStorage.setItem('alcoholTrackerData', JSON.stringify(dayData));
-        // Datum speichern ist OK – aber beim Start trotzdem immer "heute"
+        // Datum wird gespeichert, aber beim Start immer "heute" gesetzt
         localStorage.setItem('alcoholTrackerCurrentDate', currentInputDate.toISOString());
         updateStorageStatus('✅ Daten gespeichert');
         return true;
@@ -407,14 +401,13 @@
       if(!storageWorking){ updateStorageStatus('⚠️ Kein persistenter Speicher'); return; }
       try{
         const savedData = localStorage.getItem('alcoholTrackerData');
-        // savedDate bewusst ignoriert, damit IMMER heute startet
         dayData = savedData && savedData !== 'null' ? JSON.parse(savedData) : {};
-        currentInputDate = new Date();  // <-- Immer heutiges Datum verwenden
+        currentInputDate = new Date();  // Immer HEUTE starten
         updateStorageStatus(`✅ ${Object.keys(dayData).length} Tage geladen`);
       }catch(e){
         console.error('Laden fehlgeschlagen', e);
         dayData = {};
-        currentInputDate = new Date();  // <-- Fallback ebenfalls "heute"
+        currentInputDate = new Date();  // Fallback = heute
         updateStorageStatus('❌ Laden fehlgeschlagen');
       }
     }
