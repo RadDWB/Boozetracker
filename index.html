@@ -119,23 +119,13 @@
 
     /* Monatsübersicht */
     .stats-grid{
-      display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom: 12px;
+      display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom: 16px;
     }
     .stat-card{
-      background:#f9fafb;            /* leicht hinterlegt */
-      border:1px solid #e5e7eb;
-      border-radius: 14px;
-      padding:16px;
-      text-align:center;
-      transition: background .2s ease, border-color .2s ease;
+      background:#f8fafc; border:1px solid #e5e7eb; border-radius: 14px; padding:16px; text-align:center;
     }
     .stat-card .stat-number{ font-size: clamp(28px, 4.8vw, 40px); font-weight:900; margin: 6px 0 2px; }
     .stat-card .stat-label{ color:var(--muted); font-size: 13px; }
-
-    /* Erfolgsquote Ampel */
-    .rate-good{ background:#ecfdf5; border-color:#a7f3d0; }
-    .rate-warn{ background:#fffbeb; border-color:#fde68a; }
-    .rate-bad { background:#fef2f2; border-color:#fecaca; }
 
     .legend{
       display:flex; flex-wrap:wrap; gap:10px 14px; margin: 10px 0 14px; color:var(--muted); font-size: 13px;
@@ -164,7 +154,7 @@
 
     /* Spendenbereich */
     .support{
-      background:#f8fafc; border:1px solid #e5e7eb; border-radius: 14px; padding: 14px; margin: 12px 0 12px;
+      background:#f8fafc; border:1px solid #e5e7eb; border-radius: 14px; padding: 14px; margin: 8px 0 12px;
       text-align:center;
     }
     .support p{ margin: 0 0 12px; }
@@ -190,14 +180,15 @@
       #bmc-holder img{ height:44px; }
     }
 
-    /* Month header (nur Titel) + Top Nav */
+    /* Month header (nur Titel) */
     .month-head{
       display:flex; align-items:center; justify-content:center; gap:10px; margin: 10px 0 6px;
     }
     .month-title{ font-weight: 800; font-size: 20px; }
 
+    /* Top Nav (Vorheriger/Nächster über dem Rest) */
     .month-top-nav{
-      display:flex; gap:10px; justify-content:center; margin: 8px 0 14px;
+      display:flex; gap:10px; justify-content:center; margin: 10px 0 14px;
     }
     .month-top-nav .btn{ width:auto; min-width: 140px; }
     @media (max-width:420px){ .month-top-nav .btn{ min-width: 120px; } }
@@ -284,12 +275,12 @@
       </div>
 
       <div class="stats-grid">
-        <div class="stat-card" id="streakCard">
+        <div class="stat-card">
           <div class="stat-label">Aktueller Streak</div>
           <div class="stat-number" id="streakNumber">0</div>
           <div class="stat-label">alkoholfreie Tage</div>
         </div>
-        <div class="stat-card" id="successCard">
+        <div class="stat-card">
           <div class="stat-label">Erfolgsquote</div>
           <div class="stat-number" id="successRate">0%</div>
           <div class="stat-label">diesen Monat</div>
@@ -306,19 +297,19 @@
 
       <div id="monthGrid" class="cal" aria-label="Kalender"></div>
 
-      <!-- Spenden-Hinweis + Buttons (Ko-fi/PayPal zuerst, dann BMC/Stripe) -->
+      <!-- Spenden-Hinweis + Buttons (BMC zuerst, Ko-fi danach) -->
       <section class="support">
         <p><strong>Anwendung nützlich?</strong> Spendier mir doch einen Kaffee durch Klick auf den Button!</p>
         <div class="support-buttons">
-          <!-- Ko-fi (PayPal) – ERSTER Button -->
-          <div id="kofi-holder" class="btn-holder">
-            <div id="kofi-widget" aria-label="Ko-fi Unterstützungsbutton"></div>
-          </div>
-          <!-- Buy Me a Coffee (Stripe) – ZWEITER Button -->
+          <!-- Buy Me a Coffee (Stripe) – ERSTER Button -->
           <div id="bmc-holder" class="btn-holder">
             <a href="https://www.buymeacoffee.com/rduwenbecky">
               <img src="https://img.buymeacoffee.com/button-api/?text=Spendier ´n Kaffee (Stripe)&emoji=☕&slug=rduwenbecky&button_colour=5F7FFF&font_colour=ffffff&font_family=Lato&outline_colour=000000&coffee_colour=FFDD00" alt="Buy Me a Coffee Button" />
             </a>
+          </div>
+          <!-- Ko-fi (PayPal) – ZWEITER Button -->
+          <div id="kofi-holder" class="btn-holder">
+            <div id="kofi-widget" aria-label="Ko-fi Unterstützungsbutton"></div>
           </div>
         </div>
         <!-- Ko-fi Widget Script & Init -->
@@ -339,7 +330,7 @@
         <button class="edit-option sober" onclick="updateDay('sober')">🟢 Alkoholfrei</button>
         <button class="edit-option moderate" onclick="updateDay('moderate')">🟡 Moderat</button>
         <button class="edit-option alcohol" onclick="updateDay('alcohol')">🔴 Alkohol</button>
-        <button class="edit-option superday" onclick="updateDay('superday')">⭐ Supertag (No Alk + Sport!)</button>
+        <button class="edit-option superday" onclick="updateDay('superday')">⭐ Supertag</button>
         <button class="edit-option delete" onclick="updateDay('delete')">🗑️ Tag löschen</button>
         <button class="btn secondary" onclick="closeEditPopup()">Abbrechen</button>
       </div>
@@ -442,14 +433,6 @@
       document.getElementById('streakNumber').textContent = String(streak);
     }
 
-    function setSuccessCardTint(pct){
-      const card = document.getElementById('successCard');
-      card.classList.remove('rate-good','rate-warn','rate-bad');
-      if(pct < 50)      card.classList.add('rate-bad');
-      else if(pct < 75) card.classList.add('rate-warn');
-      else              card.classList.add('rate-good');
-    }
-
     function calculateSuccessRate(){
       const y = currentViewDate.getFullYear();
       const m = currentViewDate.getMonth();
@@ -469,7 +452,6 @@
       const pct = max>0 ? Math.round((total/max)*100) : 0;
       const el = document.getElementById('successRate');
       if(el) el.textContent = pct + '%';
-      setSuccessCardTint(pct);
     }
 
     /* Views */
@@ -514,7 +496,6 @@
       grid.innerHTML = '';
 
       // Wochenköpfe
-      const weekdays = ['Mo','Di','Mi','Do','Fr','Sa','So'];
       for(const w of weekdays){
         const h = document.createElement('div');
         h.className = 'weekday';
