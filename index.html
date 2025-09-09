@@ -173,4 +173,455 @@
       display:flex; align-items:center; justify-content:center;
     }
     /* BuyMeACoffee rendert <a> – hier Angleichen */
-    .support-buttons #bmc
+    .support-buttons #bmc-holder a{
+      display:inline-flex !important; align-items:center; justify-content:center; height:48px !important;
+      border-radius:12px !important;
+      box-shadow: 0 8px 18px rgba(0,0,0,.08) !important;
+    }
+    /* Ko-fi rendert iFrame – Höhe angleichen */
+    .support-buttons #kofi-holder iframe{
+      height:48px !important; min-height:48px !important;
+      transform-origin: center center;
+    }
+
+    /* Edit-„Popup“ OHNE dunkles Overlay */
+    .edit-pop{
+      position: fixed; left:50%; top: 18px; transform: translateX(-50%);
+      background:#ffffff; border:1px solid #e5e7eb; border-radius:16px; box-shadow: var(--shadow);
+      padding:14px; width: min(560px, 92vw); display:none; z-index: 50;
+    }
+    .edit-pop.active{ display:block; }
+    .edit-title{ font-weight:800; font-size:18px; margin: 4px 0 8px; color:#111827; }
+    .edit-grid{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    @media (max-width:560px){ .edit-grid{ grid-template-columns: 1fr; } }
+    .edit-option{
+      width:100%; padding:12px 14px; border-radius:12px; border:2px solid #edf2f7; background:#fff; cursor:pointer; text-align:left;
+      transition:.12s ease; font-size:15px;
+    }
+    .edit-option:hover{ transform: translateY(-1px); box-shadow: 0 8px 18px rgba(0,0,0,.08); }
+    .edit-option.sober{ border-color:#c0f1df; background:#f4fffa; }
+    .edit-option.moderate{ border-color:#ffe5b5; background:#fff9ec; }
+    .edit-option.alcohol{ border-color:#ffcaca; background:#fff2f2; }
+    .edit-option.superday{ border-color:#b7f3d2; background:linear-gradient(135deg,#f6fff9,#f1fff7); position:relative; }
+    .edit-option.superday::after{ content:"⭐"; position:absolute; right:14px; top:50%; transform: translateY(-50%); }
+    .edit-option.delete{ border-color:#e2e8f0; background:#f8fafc; }
+
+    footer{
+      margin-top: 18px; text-align:center; color:#475569; font-size: 13px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Tag-Eingabe Ansicht (Start wie zuvor) -->
+    <div id="dayInputView" class="view active">
+      <h1>🍷 Alkohol Tracker</h1>
+      <div class="current-date" id="currentDateDisplay"></div>
+
+      <div class="choice-container" role="group" aria-label="Tagesauswahl">
+        <label class="choice-option sober">
+          <input type="radio" name="dayChoice" value="sober" />
+          <span>🟢 Alkoholfrei – Kein Alkohol getrunken</span>
+        </label>
+        <label class="choice-option moderate">
+          <input type="radio" name="dayChoice" value="moderate" />
+          <span>🟡 Moderat – Wenig Alkohol getrunken</span>
+        </label>
+        <label class="choice-option alcohol">
+          <input type="radio" name="dayChoice" value="alcohol" />
+          <span>🔴 Alkohol – Viel Alkohol getrunken</span>
+        </label>
+        <label class="choice-option superday">
+          <input type="radio" name="dayChoice" value="superday" />
+          <span>⭐ Supertag – Alkoholfrei + Sport gemacht!</span>
+        </label>
+      </div>
+
+      <div class="submit-row">
+        <button id="submitDay" class="btn" disabled>Tag speichern</button>
+      </div>
+
+      <div class="storage-info" id="storageInfo">
+        🍷 Gespeicherte Tage: <span id="savedDaysCount">0</span> ·
+        <span id="storageStatus">Lade…</span>
+      </div>
+
+      <div class="submit-row" style="margin-top:12px">
+        <button class="btn secondary" onclick="showMonthView()">📊 Monatsübersicht</button>
+      </div>
+    </div>
+
+    <!-- Monats-Übersicht -->
+    <div id="monthView" class="view">
+      <h1>📊 Alkohol-Übersicht</h1>
+
+      <!-- Spenden-Hinweis + Buttons (Singular-Text) -->
+      <section class="support">
+        <p><strong>Anwendung nützlich?</strong> Spendier mir doch einen Kaffee durch Klick auf den Button!</p>
+        <div class="support-buttons">
+          <!-- Ko-fi -->
+          <div id="kofi-holder" class="btn-holder">
+            <div id="kofi-widget" aria-label="Ko-fi Unterstützungsbutton"></div>
+          </div>
+          <!-- Buy Me a Coffee -->
+          <div id="bmc-holder" class="btn-holder">
+            <script
+              type="text/javascript"
+              src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js"
+              data-name="bmc-button"
+              data-slug="rduwenbecky"
+              data-color="#40DCA5"
+              data-emoji="☕"
+              data-font="Cookie"
+              data-text="Spendier mir einen Kaffee"
+              data-outline-color="#000000"
+              data-font-color="#ffffff"
+              data-coffee-color="#FFDD00"
+            ></script>
+          </div>
+        </div>
+        <!-- Neuer Ko-fi Button (Widget v2) -->
+        <script type="text/javascript" src="https://storage.ko-fi.com/cdn/widget/Widget_2.js"></script>
+        <script type="text/javascript">
+          try {
+            // Falls der „neue“ Button andere Parameter braucht, hier einfach anpassen:
+            kofiwidget2.init('Spendier mir nen Kaffee Ko-fi', '#72a4f2', 'R5R319DK8N');
+            kofiwidget2.draw();
+          } catch (e) { console.warn('Ko-fi Widget konnte nicht geladen werden.', e); }
+        </script>
+      </section>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Aktueller Streak</div>
+          <div class="stat-number" id="streakNumber">0</div>
+          <div class="stat-label">alkoholfreie Tage</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Erfolgsquote</div>
+          <div class="stat-number" id="successRate">0%</div>
+          <div class="stat-label">diesen Monat</div>
+        </div>
+      </div>
+
+      <div class="month-head">
+        <div class="month-title" id="monthHeader">—</div>
+        <div style="display:flex; gap:8px;">
+          <button class="btn secondary" onclick="previousMonth()">← Vorheriger</button>
+          <button class="btn" onclick="nextMonth()">Nächster →</button>
+        </div>
+      </div>
+
+      <div class="legend">
+        <span><span class="dot" style="background: var(--success)"></span>Alkoholfrei</span>
+        <span><span class="dot" style="background: var(--warn)"></span>Moderat</span>
+        <span><span class="dot" style="background: var(--danger)"></span>Alkohol</span>
+        <span><span class="dot" style="background: var(--super)"></span>⭐ Supertag</span>
+        <span><span class="dot" style="background: #e2e8f0"></span>Neutral</span>
+      </div>
+
+      <div id="monthGrid" class="cal" aria-label="Kalender"></div>
+
+      <div class="submit-row">
+        <button class="btn secondary" onclick="showDayInput()">← Zurück zur Eingabe</button>
+        <button class="btn" onclick="previousMonth()">← Vorheriger Monat</button>
+        <button class="btn" onclick="nextMonth()">Nächster Monat →</button>
+      </div>
+    </div>
+
+    <!-- Edit-Karte (ohne dunkles Overlay) -->
+    <div id="editPopup" class="edit-pop" aria-hidden="true">
+      <div class="edit-title" id="editDate">Datum</div>
+      <div class="edit-grid">
+        <button class="edit-option sober" onclick="updateDay('sober')">🟢 Alkoholfrei</button>
+        <button class="edit-option moderate" onclick="updateDay('moderate')">🟡 Moderat</button>
+        <button class="edit-option alcohol" onclick="updateDay('alcohol')">🔴 Alkohol</button>
+        <button class="edit-option superday" onclick="updateDay('superday')">⭐ Supertag</button>
+        <button class="edit-option delete" onclick="updateDay('delete')">🗑️ Tag löschen</button>
+        <button class="btn secondary" onclick="closeEditPopup()">Abbrechen</button>
+      </div>
+    </div>
+
+    <footer>© 2025 by R. Duwenbeck</footer>
+  </div>
+
+  <script>
+    console.log('🍷 Alkohol Tracker gestartet');
+
+    let currentInputDate = new Date();
+    let currentViewDate = new Date();
+    let dayData = {};
+    let editingDate = null;
+    let storageWorking = false;
+
+    const monthNames = ['Januar','Februar','März','April','Mai','Juni','Juli','August','September','Oktober','November','Dezember'];
+    const weekdays   = ['Mo','Di','Mi','Do','Fr','Sa','So'];
+
+    function formatDateKey(date){ return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`; }
+    function formatDisplayDate(date){
+      const d = date.getDate();
+      const m = monthNames[date.getMonth()];
+      const y = date.getFullYear();
+      return `${d}. ${m} ${y}`;
+    }
+
+    /* Storage */
+    function testStorage(){
+      try{
+        localStorage.setItem('__test__','1');
+        localStorage.removeItem('__test__');
+        storageWorking = true;
+        return true;
+      }catch(e){
+        storageWorking = false;
+        return false;
+      }
+    }
+
+    function updateStorageStatus(message){
+      const status = document.getElementById('storageStatus');
+      const count  = document.getElementById('savedDaysCount');
+      if(status) status.textContent = message;
+      if(count)  count.textContent  = Object.keys(dayData).length;
+    }
+
+    function saveData(){
+      if(!storageWorking){ updateStorageStatus('❌ Speichern nicht möglich'); return false; }
+      try{
+        localStorage.setItem('alcoholTrackerData', JSON.stringify(dayData));
+        localStorage.setItem('alcoholTrackerCurrentDate', currentInputDate.toISOString());
+        updateStorageStatus('✅ Daten gespeichert');
+        return true;
+      }catch(e){
+        console.error('Storage error', e);
+        updateStorageStatus('❌ Speicher-Fehler');
+        return false;
+      }
+    }
+
+    function loadData(){
+      if(!storageWorking){ updateStorageStatus('⚠️ Kein persistenter Speicher'); return; }
+      try{
+        const savedData = localStorage.getItem('alcoholTrackerData');
+        const savedDate = localStorage.getItem('alcoholTrackerCurrentDate');
+        dayData = savedData && savedData !== 'null' ? JSON.parse(savedData) : {};
+        currentInputDate = savedDate && savedDate !== 'null' ? new Date(savedDate) : new Date();
+        updateStorageStatus(`✅ ${Object.keys(dayData).length} Tage geladen`);
+      }catch(e){
+        console.error('Laden fehlgeschlagen', e);
+        dayData = {};
+        currentInputDate = new Date();
+        updateStorageStatus('❌ Laden fehlgeschlagen');
+      }
+    }
+
+    /* Metriken */
+    function calculateStreak(){
+      let latest = null;
+      for(const key in dayData){
+        const val = dayData[key];
+        if(val==='sober' || val==='superday'){
+          const [y,m,d] = key.split('-').map(Number);
+          const dt = new Date(y,m,d);
+          if(!latest || dt > latest) latest = dt;
+        }
+      }
+      if(!latest){ document.getElementById('streakNumber').textContent = '0'; return; }
+
+      let streak = 0;
+      const probe = new Date(latest);
+      for(let i=0;i<400;i++){
+        const key = formatDateKey(probe);
+        const st = dayData[key];
+        if(st==='sober' || st==='superday'){ streak++; probe.setDate(probe.getDate()-1); }
+        else break;
+      }
+      document.getElementById('streakNumber').textContent = String(streak);
+    }
+
+    function calculateSuccessRate(){
+      const y = currentViewDate.getFullYear();
+      const m = currentViewDate.getMonth();
+      let total=0, max=0;
+
+      const last = new Date(y, m+1, 0).getDate();
+      for(let d=1; d<=last; d++){
+        const key = formatDateKey(new Date(y,m,d));
+        const st = dayData[key];
+        if(!st) continue;
+        max += 1;
+        if(st==='superday') total += 1.0;
+        else if(st==='sober') total += 0.75;
+        else if(st==='moderate') total += 0.4;
+        else total += 0;
+      }
+      const pct = max>0 ? Math.round((total/max)*100) : 0;
+      const el = document.getElementById('successRate');
+      if(el) el.textContent = pct + '%';
+    }
+
+    /* Views */
+    function updateDayInputView(){
+      document.getElementById('currentDateDisplay').textContent = formatDisplayDate(currentInputDate);
+      updateStorageStatus(`🍷 ${Object.keys(dayData).length} Tage`);
+
+      const key = formatDateKey(currentInputDate);
+      const existing = dayData[key];
+      const btn = document.getElementById('submitDay');
+      if(existing){
+        const radio = document.querySelector(`input[name="dayChoice"][value="${existing}"]`);
+        if(radio) radio.checked = true;
+        btn.disabled = false;
+        btn.textContent = 'Tag aktualisieren';
+      }else{
+        btn.textContent = 'Tag speichern';
+      }
+    }
+
+    function showMonthView(){
+      currentViewDate = new Date(currentInputDate);
+      document.getElementById('dayInputView').classList.remove('active');
+      document.getElementById('monthView').classList.add('active');
+      updateMonthView();
+      calculateStreak();
+      calculateSuccessRate();
+    }
+
+    function showDayInput(){
+      document.getElementById('monthView').classList.remove('active');
+      document.getElementById('dayInputView').classList.add('active');
+      closeEditPopup();
+    }
+
+    function updateMonthView(){
+      const y = currentViewDate.getFullYear();
+      const m = currentViewDate.getMonth();
+      document.getElementById('monthHeader').textContent = `${monthNames[m]} ${y}`;
+
+      const grid = document.getElementById('monthGrid');
+      grid.innerHTML = '';
+
+      // Wochenköpfe
+      for(const w of weekdays){
+        const h = document.createElement('div');
+        h.className = 'weekday';
+        h.textContent = w;
+        grid.appendChild(h);
+      }
+
+      const first = new Date(y, m, 1);
+      const last  = new Date(y, m+1, 0);
+      const startDay = (first.getDay()+6)%7; // Montag zuerst
+
+      // Leere Felder
+      for(let i=0;i<startDay;i++){
+        const e = document.createElement('div');
+        e.className='day';
+        e.style.visibility='hidden';
+        grid.appendChild(e);
+      }
+
+      const today = new Date();
+      for(let d=1; d<=last.getDate(); d++){
+        const cell = document.createElement('div');
+        cell.className = 'day';
+        cell.textContent = d;
+
+        const dt = new Date(y, m, d);
+        const key = formatDateKey(dt);
+        const st = dayData[key];
+
+        if(st) cell.classList.add(st);
+        if(dt.toDateString() === today.toDateString()) cell.classList.add('today');
+
+        cell.addEventListener('click', ()=>openEditPopup(dt));
+        grid.appendChild(cell);
+      }
+    }
+
+    /* Edit ohne dunkles Overlay */
+    function openEditPopup(date){
+      editingDate = date;
+      const pop = document.getElementById('editPopup');
+      document.getElementById('editDate').textContent = formatDisplayDate(date);
+      pop.classList.add('active');
+      pop.setAttribute('aria-hidden','false');
+    }
+    function closeEditPopup(){
+      const pop = document.getElementById('editPopup');
+      pop.classList.remove('active');
+      pop.setAttribute('aria-hidden','true');
+      editingDate = null;
+    }
+
+    function updateDay(action){
+      if(!editingDate) return;
+      const key = formatDateKey(editingDate);
+      if(action==='delete') delete dayData[key];
+      else dayData[key] = action;
+
+      saveData();
+      closeEditPopup();
+      updateMonthView();
+      calculateStreak();
+      calculateSuccessRate();
+    }
+
+    function previousMonth(){
+      currentViewDate.setMonth(currentViewDate.getMonth()-1);
+      updateMonthView();
+      calculateSuccessRate();
+    }
+    function nextMonth(){
+      currentViewDate.setMonth(currentViewDate.getMonth()+1);
+      updateMonthView();
+      calculateSuccessRate();
+    }
+
+    /* Save day */
+    function saveDay(){
+      const selected = document.querySelector('input[name="dayChoice"]:checked');
+      if(!selected) return;
+      const key = formatDateKey(currentInputDate);
+      dayData[key] = selected.value;
+
+      const btn = document.getElementById('submitDay');
+      const ok = saveData();
+      const label = btn.textContent;
+      btn.textContent = ok ? '✅ Gespeichert!' : '❌ Fehler!';
+      setTimeout(()=>btn.textContent = label, 1200);
+
+      calculateStreak();
+
+      // Nächster Tag
+      currentInputDate.setDate(currentInputDate.getDate()+1);
+      updateDayInputView();
+
+      // Reset
+      document.querySelectorAll('input[name="dayChoice"]').forEach(r=>r.checked=false);
+      btn.disabled = true;
+    }
+
+    // Expose
+    window.showMonthView = showMonthView;
+    window.showDayInput = showDayInput;
+    window.previousMonth = previousMonth;
+    window.nextMonth = nextMonth;
+    window.openEditPopup = openEditPopup;
+    window.closeEditPopup = closeEditPopup;
+    window.updateDay = updateDay;
+
+    // Init
+    document.addEventListener('DOMContentLoaded', ()=>{
+      testStorage();
+      loadData();
+      document.querySelectorAll('input[name="dayChoice"]').forEach(radio=>{
+        radio.addEventListener('change', ()=>{ document.getElementById('submitDay').disabled = false; });
+      });
+      document.getElementById('submitDay').addEventListener('click', saveDay);
+      updateDayInputView();
+    });
+  </script>
+  <!-- Ko-fi Widget wird oben im Support-Block initialisiert -->
+</body>
+</html>
